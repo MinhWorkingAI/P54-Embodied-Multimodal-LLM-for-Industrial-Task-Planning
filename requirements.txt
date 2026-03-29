@@ -1,0 +1,21 @@
+# LLM
+openai>=1.0.0
+langchain>=0.1.0
+langchain-openai>=0.0.5
+
+# Computer Vision
+opencv-python>=4.8.0
+ultralytics>=8.0.0
+numpy>=1.24.0
+Pillow>=10.0.0
+
+# Simulation
+pybullet>=3.2.5
+pygame>=2.5.0
+
+# Utilities
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+
+# Testing
+pytest>=7.4.0
