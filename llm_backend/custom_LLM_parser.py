@@ -1,0 +1,124 @@
+"""
+custom_LLM_parser.py
+--------------------
+LLM instruction parser -- backend-agnostic.
+Converts natural language robot instructions into structured JSON
+conforming to the ParsedInstruction schema.
+
+Backend is selected at runtime via the LLM_BACKEND environment variable:
+    LLM_BACKEND=openai   (default) -- uses OpenAI GPT-4o
+    LLM_BACKEND=gemini              -- uses Google Gemini 1.5 Flash
+
+All API credentials and model config are owned entirely by the backend
+modules (backends/openai_backend.py, backends/gemini_backend.py).
+This file contains zero credential logic.
+
+Full pipeline per call:
+    1. Pre-check  : reject empty instructions immediately.
+    2. Pre-check  : short-circuit vague instructions (no API call made).
+    3. Normalise  : strip/collapse whitespace before sending to LLM.
+    4. LLM call   : with configurable retry on JSON parse failure.
+    5. Post-check : downgrade confidence for unknown objects/destinations.
+
+Usage:
+    from custom_LLM_parser import parse_instruction
+    result = parse_instruction("pick up the red block")
+"""
+
+import os
+import logging
+from dotenv import load_dotenv
+
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.exceptions import OutputParserException
+
+from schema import ParsedInstruction
+from prompts import build_system_prompt
+from edge_cases import (
+    is_empty_instruction,
+    is_too_vague,
+    normalise_instruction,
+    validate_parsed_result,
+    make_vague_result,
+)
+from backends import get_llm
+
+# -- Logging -------------------------------------------------------------------
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+# -- Environment ---------------------------------------------------------------
+load_dotenv()
+
+# -- Chain setup ---------------------------------------------------------------
+# Build once at module load; backend is chosen from env var here.
+output_parser = PydanticOutputParser(pydantic_object=ParsedInstruction)
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", build_system_prompt(output_parser.get_format_instructions())),
+    ("human",  "Instruction: {instruction}"),
+])
+
+llm   = get_llm()
+chain = prompt | llm | output_parser
+
+# -- Public interface ----------------------------------------------------------
+def parse_instruction(instruction: str, max_retries: int = 2) -> ParsedInstruction:
+    """
+    Parse a natural language robot instruction into a structured ParsedInstruction.
+
+    Args:
+        instruction:  Plain English task instruction from the operator.
+        max_retries:  Retry attempts on JSON parse failure (default: 2).
+
+    Returns:
+        ParsedInstruction: Validated structured output.
+
+    Raises:
+        ValueError: If the instruction is empty or parsing fails after all retries.
+
+    Example:
+        >>> result = parse_instruction("pick up the red block")
+        >>> result.action          # ActionType.PICK
+        >>> result.object_target   # "red block"
+        >>> result.confidence      # ConfidenceLevel.HIGH
+    """
+    # Step 1 -- reject empty
+    if is_empty_instruction(instruction):
+        raise ValueError("Instruction cannot be empty.")
+
+    # Step 2 -- short-circuit vague (saves API credits)
+    if is_too_vague(instruction):
+        logger.warning(f"Vague instruction short-circuited (no API call): '{instruction}'")
+        return make_vague_result(instruction)
+
+    # Step 3 -- normalise
+    instruction = normalise_instruction(instruction)
+    logger.info(f"Parsing: '{instruction}' via {os.getenv('LLM_BACKEND', 'openai')} backend")
+
+    # Step 4 -- LLM call with retry
+    last_error = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            result = chain.invoke({"instruction": instruction})
+            logger.info(f"Parsed successfully on attempt {attempt}: {result}")
+
+            # Step 5 -- post-validate
+            return validate_parsed_result(result)
+
+        except OutputParserException as e:
+            last_error = e
+            logger.warning(f"Attempt {attempt} failed (OutputParserException): {e}")
+
+        except Exception as e:
+            last_error = e
+            logger.warning(f"Attempt {attempt} failed ({type(e).__name__}): {e}")
+
+    raise ValueError(
+        f"Failed to parse instruction after {max_retries} attempts. "
+        f"Last error: {last_error}"
+    )
