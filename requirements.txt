@@ -2,7 +2,8 @@
 openai>=1.0.0
 langchain>=0.1.0
 langchain-openai>=0.0.5
-# langchain-google-genai>=0.0.5
+langchain-google-genai>=0.0.5
+langchain-deepseek>=0.1.0 
 
 # Computer Vision
 opencv-python>=4.8.0
