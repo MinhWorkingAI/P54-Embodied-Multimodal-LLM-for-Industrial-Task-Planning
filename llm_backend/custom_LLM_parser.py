@@ -6,12 +6,13 @@ Converts natural language robot instructions into structured JSON
 conforming to the ParsedInstruction schema.
 
 Backend is selected at runtime via the LLM_BACKEND environment variable:
-    LLM_BACKEND=openai   (default) -- uses OpenAI GPT-4o
-    LLM_BACKEND=gemini              -- uses Google Gemini 1.5 Flash
+    LLM_BACKEND=openai    (default) -- uses OpenAI GPT-4o
+    LLM_BACKEND=gemini               -- uses Google Gemini
+    LLM_BACKEND=deepseek             -- uses DeepSeek
 
 All API credentials and model config are owned entirely by the backend
-modules (backends/openai_backend.py, backends/gemini_backend.py).
-This file contains zero credential logic.
+modules (backends/openai_backend.py, backends/gemini_backend.py,
+backends/deepseek_backend.py). This file contains zero credential logic.
 
 Full pipeline per call:
     1. Pre-check  : reject empty instructions immediately.
@@ -29,7 +30,7 @@ import os
 import logging
 from dotenv import load_dotenv
 
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.exceptions import OutputParserException
 
@@ -54,17 +55,34 @@ logger = logging.getLogger(__name__)
 # -- Environment ---------------------------------------------------------------
 load_dotenv()
 
-# -- Chain setup ---------------------------------------------------------------
-# Build once at module load; backend is chosen from env var here.
+# -- Setup ---------------------------------------------------------------------
+# Build the output parser and system prompt once at module load.
+# We use SystemMessage / HumanMessage directly instead of ChatPromptTemplate
+# to avoid LangChain's f-string template engine misinterpreting the JSON
+# braces inside the system prompt (format_instructions + few-shot examples).
 output_parser = PydanticOutputParser(pydantic_object=ParsedInstruction)
+system_prompt  = build_system_prompt(output_parser.get_format_instructions())
+llm            = get_llm()
 
-prompt = ChatPromptTemplate.from_messages([
-    ("system", build_system_prompt(output_parser.get_format_instructions())),
-    ("human",  "Instruction: {instruction}"),
-])
+# -- Helpers ------------------------------------------------------------------
+def _clean_json(text: str) -> str:
+    """
+    Strip markdown code fences that some LLMs (e.g. OpenAI) wrap around JSON.
 
-llm   = get_llm()
-chain = prompt | llm | output_parser
+    Examples of what this handles:
+        ```json\n{...}\n```   ->  {...}
+        ```\n{...}\n```       ->  {...}
+        {...}                  ->  {...}  (returned unchanged)
+    """
+    text = text.strip()
+    if text.startswith("```"):
+        # Remove opening fence (```json or ```)
+        text = text.split("\n", 1)[-1]
+        # Remove closing fence
+        if text.endswith("```"):
+            text = text[:-3]
+    return text.strip()
+
 
 # -- Public interface ----------------------------------------------------------
 def parse_instruction(instruction: str, max_retries: int = 2) -> ParsedInstruction:
@@ -101,10 +119,16 @@ def parse_instruction(instruction: str, max_retries: int = 2) -> ParsedInstructi
     logger.info(f"Parsing: '{instruction}' via {os.getenv('LLM_BACKEND', 'openai')} backend")
 
     # Step 4 -- LLM call with retry
+    # Messages are built fresh each call so the instruction is injected cleanly.
     last_error = None
     for attempt in range(1, max_retries + 1):
         try:
-            result = chain.invoke({"instruction": instruction})
+            messages = [
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=f"Instruction: {instruction}"),
+            ]
+            response = llm.invoke(messages)
+            result   = output_parser.parse(_clean_json(response.content))
             logger.info(f"Parsed successfully on attempt {attempt}: {result}")
 
             # Step 5 -- post-validate

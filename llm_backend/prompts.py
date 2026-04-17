@@ -132,19 +132,8 @@ RULES:
 
 
 def build_system_prompt(format_instructions: str) -> str:
-    """
-    Build the final system prompt with few-shot examples and format instructions.
-
-    The few-shot examples contain JSON with curly braces. LangChain's
-    ChatPromptTemplate treats any {x} as a template variable, so we must
-    escape every brace in the few-shot block ({{ and }}) before the full
-    string is handed to the template engine.
-    """
-    # Escape braces in the few-shot block so LangChain does not treat them
-    # as template variables.
-    few_shot_escaped = format_few_shot_examples().replace("{", "{{").replace("}", "}}")
-
+    """Build the final system prompt with few-shot examples and format instructions."""
     return SYSTEM_PROMPT_TEMPLATE.format(
-        few_shot_examples=few_shot_escaped,
+        few_shot_examples=format_few_shot_examples(),
         format_instructions=format_instructions,
     )
