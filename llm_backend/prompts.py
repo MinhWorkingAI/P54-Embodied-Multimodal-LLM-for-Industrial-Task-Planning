@@ -6,7 +6,7 @@ Keeping prompts here (not buried in parser.py) makes them easy to tune
 without touching any logic code.
 """
 
-# ── Few-shot examples ─────────────────────────────────────────────────────────
+# -- Few-shot examples ---------------------------------------------------------
 # These are shown to the LLM every call to lock in the expected output format.
 # Cover: simple, spatial, multi-object, ambiguous, and edge cases.
 
@@ -97,7 +97,7 @@ def format_few_shot_examples() -> str:
     return "\n".join(lines)
 
 
-# ── System prompt ─────────────────────────────────────────────────────────────
+# -- System prompt -------------------------------------------------------------
 SYSTEM_PROMPT_TEMPLATE = """
 You are an instruction parser for an intelligent industrial robot operating \
 in a simulated workspace.

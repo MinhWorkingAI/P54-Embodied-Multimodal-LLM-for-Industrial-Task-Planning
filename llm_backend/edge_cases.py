@@ -9,10 +9,10 @@ import re
 from typing import Optional
 from schema import ParsedInstruction, ConfidenceLevel
 
-# ── Allowed action types ──────────────────────────────────────────────────────
+# -- Allowed action types ------------------------------------------------------
 ALLOWED_ACTIONS = {"pick", "place", "move", "locate"}
 
-# ── Action synonym map ────────────────────────────────────────────────────────
+# -- Action synonym map --------------------------------------------------------
 # Maps common synonyms to valid actions so the LLM has less to figure out.
 ACTION_SYNONYMS = {
     "grab": "pick",
@@ -32,7 +32,7 @@ ACTION_SYNONYMS = {
     "look": "locate",
 }
 
-# ── Known objects and locations ───────────────────────────────────────────────
+# -- Known objects and locations -----------------------------------------------
 KNOWN_OBJECTS = {
     "red block", "blue block", "green block", "yellow block",
     "red cube", "blue cube", "green cube", "yellow cube",
