@@ -85,7 +85,7 @@ def run_interactive(parse_fn):
 
 
 def main():
-    from custom_LLM_parser import parse_instruction  # flat import -- works when run as script
+    from .custom_LLM_parser import parse_instruction  # flat import -- works when run as script
 
     if "--interactive" in sys.argv or "-i" in sys.argv:
         run_interactive(parse_instruction)
