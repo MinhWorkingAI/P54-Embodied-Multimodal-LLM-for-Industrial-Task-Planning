@@ -31,6 +31,8 @@ import sys
 import os
 import argparse
 import logging
+import time
+
 
 # Ensure imports work from project root
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -130,7 +132,6 @@ def run_pipeline(
         print(f"\n  [1/5] LLM Parse ({model})")
 
     try:
-        import time
         t0     = time.perf_counter()
         parsed = parse_instruction(instruction)
         lat    = (time.perf_counter() - t0) * 1000
@@ -195,7 +196,6 @@ def run_pipeline(
         print(f"\n  [3/5] Task Planning")
 
     try:
-        import time
         planner = TaskPlanner()
         t0      = time.perf_counter()
         plan    = planner.generate_plan(parsed, scene, task_id=task_id)
