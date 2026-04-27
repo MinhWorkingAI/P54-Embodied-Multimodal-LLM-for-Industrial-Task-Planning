@@ -34,16 +34,16 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.exceptions import OutputParserException
 
-from schema import ParsedInstruction
-from prompts import build_system_prompt
-from edge_cases import (
+from .schema import ParsedInstruction
+from .prompts import build_system_prompt
+from .edge_cases import (
     is_empty_instruction,
     is_too_vague,
     normalise_instruction,
     validate_parsed_result,
     make_vague_result,
 )
-from backends import get_llm
+from .backends import get_llm
 
 # -- Logging -------------------------------------------------------------------
 logging.basicConfig(

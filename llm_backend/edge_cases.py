@@ -7,7 +7,7 @@ Keeps parser.py clean and makes edge case behaviour easy to test independently.
 
 import re
 from typing import Optional
-from schema import ParsedInstruction, ConfidenceLevel
+from .schema import ParsedInstruction, ConfidenceLevel
 
 # -- Allowed action types ------------------------------------------------------
 ALLOWED_ACTIONS = {"pick", "place", "move", "locate"}

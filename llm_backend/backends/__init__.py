@@ -28,11 +28,11 @@ def get_llm():
     backend = os.getenv("LLM_BACKEND", "openai").lower().strip()
 
     if backend == "openai":
-        from backends.openai_backend import build_llm
+        from .openai_backend import build_llm  
     elif backend == "gemini":
-        from backends.gemini_backend import build_llm
+        from .gemini_backend import build_llm  
     elif backend == "deepseek":
-        from backends.deepseek_backend import build_llm
+        from .deepseek_backend import build_llm
     elif backend == "huggingface":
         from backends.huggingface_backend import build_llm
     else:
