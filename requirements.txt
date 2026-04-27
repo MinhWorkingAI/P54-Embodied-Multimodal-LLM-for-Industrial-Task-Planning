@@ -1,9 +1,32 @@
-# LLM
+# LLM Backend
 openai>=1.0.0
 langchain>=0.1.0
 langchain-openai>=0.0.5
 langchain-google-genai>=0.0.5
 langchain-deepseek>=0.1.0 
+langchain-core>=0.2.0
+
+#Hugginface local LLM
+langchain-huggingface>=0.1.0
+transformers>=4.40.0
+accelerate>=0.30.0
+bitsandbytes>=0.43.0		# 4-bit quantization (optional, GPU only)
+
+#Note: Torch is a dependency of transformers, so you might need to uninstall the existing version and install the compatible one
+#       pip uninstall torch torchvision torchaudio -y
+#
+#   CUDA 12.1 (most common):
+#       pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+#
+#   CUDA 11.8:
+#       pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+#   CPU only (no GPU):
+#       pip install torch torchvision torchaudio
+#
+# Best practice is to manually install the compatible torch version first, then install the rest of the dependencies, to avoid version conflicts.
+#       pip install -r requirements.txt
+
+
 
 # Computer Vision
 opencv-python>=4.8.0
