@@ -107,7 +107,6 @@ def build_llm():
     except ImportError as e:
         raise ImportError(
             f"Missing dependency for HuggingFace backend: {e}\n"
-            "Install with: pip install langchain-huggingface transformers accelerate"
         ) from e
 
     model_id     = os.getenv("HF_MODEL", DEFAULT_MODEL)
