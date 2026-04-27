@@ -28,9 +28,6 @@ Usage:
 import logging
 import sys
 import os
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from llm_backend.schema import ParsedInstruction, ActionType
 from execution.action_schema import ActionPlan, RobotCommand, CommandType, Position
 

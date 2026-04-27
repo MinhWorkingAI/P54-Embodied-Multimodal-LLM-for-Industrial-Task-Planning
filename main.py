@@ -45,9 +45,9 @@ from llm_backend.custom_LLM_parser     import parse_instruction
 from llm_backend.schema     import ParsedInstruction, ConfidenceLevel
 from llm_backend.tracker    import PipelineTracker
 from task_planner.planner  import TaskPlanner
-from .execution.mock_robot  import MockRobot
-from .execution.executor    import Executor
-from .execution.action_schema import plan_to_commands
+from execution.mock_robot  import MockRobot
+from execution.executor    import Executor
+from execution.action_schema import plan_to_commands
 
 logging.basicConfig(
     level=logging.WARNING,  # Set to DEBUG for verbose output

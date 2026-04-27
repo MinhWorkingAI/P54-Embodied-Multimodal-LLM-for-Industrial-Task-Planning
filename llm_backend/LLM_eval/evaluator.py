@@ -25,9 +25,9 @@ from typing import Optional
 
 from langchain_core.exceptions import OutputParserException
 
-from .schema import ParsedInstruction
+from ..schema import ParsedInstruction
 from .test_cases import TEST_CASES, TestCase, get_cases_by_category
-from .edge_cases import (
+from ..edge_cases import (
     is_empty_instruction,
     is_too_vague,
     normalise_instruction,

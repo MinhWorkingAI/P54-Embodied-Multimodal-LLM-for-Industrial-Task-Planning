@@ -48,7 +48,7 @@ def main():
         print("Sending test message...\n")
 
     try:
-        from backends import get_llm
+        from .backends import get_llm
         llm = get_llm()
     except EnvironmentError as e:
         print(f"  Setup error: {e}")

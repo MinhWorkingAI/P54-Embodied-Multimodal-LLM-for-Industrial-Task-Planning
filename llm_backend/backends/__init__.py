@@ -12,7 +12,6 @@ import os
 
 SUPPORTED_BACKENDS = ("openai", "gemini", "deepseek", "huggingface")
 
-
 def get_llm():
     """
     Return an initialised LangChain LLM based on the LLM_BACKEND env var.
@@ -34,7 +33,7 @@ def get_llm():
     elif backend == "deepseek":
         from .deepseek_backend import build_llm
     elif backend == "huggingface":
-        from backends.huggingface_backend import build_llm
+        from .huggingface_backend import build_llm
     else:
         raise ValueError(
             f"Unsupported LLM_BACKEND='{backend}'. "

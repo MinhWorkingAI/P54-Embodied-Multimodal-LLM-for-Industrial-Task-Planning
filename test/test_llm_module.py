@@ -20,8 +20,8 @@ Run integration tests against Gemini:
 import pytest
 from unittest.mock import patch, MagicMock
 
-from .schema import ParsedInstruction, ActionType, ConfidenceLevel
-from .edge_cases import (
+from llm_backend.schema import ParsedInstruction, ActionType, ConfidenceLevel
+from llm_backend.edge_cases import (
     is_empty_instruction,
     is_too_vague,
     normalise_instruction,
@@ -193,28 +193,28 @@ class TestBackendFactory:
 
     def test_invalid_backend_raises(self, monkeypatch):
         monkeypatch.setenv("LLM_BACKEND", "llamacpp")
-        from .backends import get_llm
+        from llm_backend.backends import get_llm
         with pytest.raises(ValueError, match="Unsupported LLM_BACKEND"):
             get_llm()
 
     def test_missing_openai_key_raises(self, monkeypatch):
         monkeypatch.setenv("LLM_BACKEND", "openai")
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-        from .backends.openai_backend import build_llm
+        from llm_backend.backends.openai_backend import build_llm
         with pytest.raises(EnvironmentError):
             build_llm()
 
     def test_missing_gemini_key_raises(self, monkeypatch):
         monkeypatch.setenv("LLM_BACKEND", "gemini")
         monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-        from .backends.gemini_backend import build_llm
+        from llm_backend.backends.gemini_backend import build_llm
         with pytest.raises(EnvironmentError):
             build_llm()
 
     def test_missing_deepseek_key_raises(self, monkeypatch):
         monkeypatch.setenv("LLM_BACKEND", "deepseek")
         monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
-        from .backends.deepseek_backend import build_llm
+        from llm_backend.backends.deepseek_backend import build_llm
         with pytest.raises(EnvironmentError):
             build_llm()
 
