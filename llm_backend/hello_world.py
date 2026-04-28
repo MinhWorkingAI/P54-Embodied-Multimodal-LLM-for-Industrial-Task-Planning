@@ -90,6 +90,5 @@ def main():
             print("  Check that your model downloaded correctly and you have enough RAM.")
         sys.exit(1)
 
-
 if __name__ == "__main__":
     main()

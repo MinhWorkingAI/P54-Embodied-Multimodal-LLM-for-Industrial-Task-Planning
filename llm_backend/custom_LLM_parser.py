@@ -9,6 +9,7 @@ Backend is selected at runtime via the LLM_BACKEND environment variable:
     LLM_BACKEND=openai    (default) -- uses OpenAI GPT-4o
     LLM_BACKEND=gemini               -- uses Google Gemini
     LLM_BACKEND=deepseek             -- uses DeepSeek
+    LLM_BACKEND=huggingface          -- uses local HuggingFace model
 
 All API credentials and model config are owned entirely by the backend
 modules (backends/openai_backend.py, backends/gemini_backend.py,
@@ -61,8 +62,22 @@ load_dotenv()
 # to avoid LangChain's f-string template engine misinterpreting the JSON
 # braces inside the system prompt (format_instructions + few-shot examples).
 output_parser = PydanticOutputParser(pydantic_object=ParsedInstruction)
-system_prompt  = build_system_prompt(output_parser.get_format_instructions())
-llm            = get_llm()
+system_prompt = build_system_prompt(output_parser.get_format_instructions())
+
+# -- Lazy LLM initialisation --------------------------------------------------
+# The LLM is NOT created at import time. This avoids crashing the entire
+# module if an API key is missing or the backend is misconfigured.
+# The LLM client is built on first use and then cached for subsequent calls.
+_llm = None
+
+
+def _get_llm():
+    """Return the cached LLM client, building it on first call."""
+    global _llm
+    if _llm is None:
+        _llm = get_llm()
+    return _llm
+
 
 # -- Helpers ------------------------------------------------------------------
 def _clean_json(text: str) -> str:
@@ -127,7 +142,7 @@ def parse_instruction(instruction: str, max_retries: int = 2) -> ParsedInstructi
                 SystemMessage(content=system_prompt),
                 HumanMessage(content=f"Instruction: {instruction}"),
             ]
-            response = llm.invoke(messages)
+            response = _get_llm().invoke(messages)
             result   = output_parser.parse(_clean_json(response.content))
             logger.info(f"Parsed successfully on attempt {attempt}: {result}")
 

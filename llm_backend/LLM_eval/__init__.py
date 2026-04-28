@@ -1,3 +1,10 @@
-"""LLM evaluation and benchmarking sub-package. Do not delete this __init__.py file."""
+"""
+llm_eval
+--------
+LLM evaluation and benchmarking sub-package.
+Comparative analysis across GPT-4o, Gemini, and DeepSeek.
 
-"""Without it, Python won't treat llm_eval/ as a package and none of the imports from inside it will work."""
+Usage:
+    from llm_backend.llm_eval.comparison_report import run_comparison_report
+    run_comparison_report(models=["openai", "gemini"])
+"""

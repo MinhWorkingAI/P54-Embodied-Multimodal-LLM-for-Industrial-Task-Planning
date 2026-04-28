@@ -1,9 +1,10 @@
 """
 model_registry.py
 -----------------
-Unified registry for all supported LLM models.
-Each model is loaded from environment variables so no API key is
-ever hardcoded. Add new models here without touching parser.py.
+Unified registry for all supported LLM models used by the evaluation system.
+
+Instead of building LLMs from scratch, this module delegates to the existing
+backends/ factory so there is a single source of truth for LLM construction.
 
 Supported models (configured via .env):
     OPENAI_API_KEY   + OPENAI_MODEL    -> GPT-4o (default: gpt-4o)
@@ -11,7 +12,7 @@ Supported models (configured via .env):
     DEEPSEEK_API_KEY + DEEPSEEK_MODEL  -> DeepSeek (default: deepseek-chat)
 
 Usage:
-    from model_registry import get_chain, AVAILABLE_MODELS
+    from llm_backend.llm_eval.model_registry import get_chain, get_available_models
     chain = get_chain("openai")
     chain = get_chain("gemini")
     chain = get_chain("deepseek")
@@ -22,12 +23,15 @@ import logging
 from typing import Literal
 
 from dotenv import load_dotenv
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import (
+    ChatPromptTemplate,
+    SystemMessagePromptTemplate,
+    HumanMessagePromptTemplate,
+)
 from langchain_core.output_parsers import PydanticOutputParser
-from langchain_openai import ChatOpenAI
 
-from .schema import ParsedInstruction
-from .prompts import build_system_prompt
+from ..schema import ParsedInstruction       # up to llm_backend
+from ..prompts import build_system_prompt    # up to llm_backend
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -46,68 +50,46 @@ MODEL_DISPLAY_NAMES: dict[ModelName, str] = {
 
 # ── Shared prompt + output parser ─────────────────────────────────────────────
 _output_parser = PydanticOutputParser(pydantic_object=ParsedInstruction)
-_system_prompt  = build_system_prompt(
+_system_prompt = build_system_prompt(
     format_instructions=_output_parser.get_format_instructions()
 )
-# _prompt_template = ChatPromptTemplate.from_messages([
-#     ("system", _system_prompt),
-#     ("human",  "Instruction: {instruction}"),
-from langchain_core.prompts import SystemMessagePromptTemplate, HumanMessagePromptTemplate
 
 _prompt_template = ChatPromptTemplate.from_messages([
-    # Use template_format="mustache" or just escape the braces
+    # Use template_format="mustache" to avoid LangChain misinterpreting
+    # the JSON braces inside the system prompt as f-string placeholders.
     SystemMessagePromptTemplate.from_template(_system_prompt, template_format="mustache"),
-    HumanMessagePromptTemplate.from_template("Instruction: {instruction}")
-
+    HumanMessagePromptTemplate.from_template("Instruction: {instruction}"),
 ])
 
+# ── Backend builder map ───────────────────────────────────────────────────────
+# Each entry lazily imports from the existing backends/ package so that:
+#   1. There is no duplicated LLM construction logic.
+#   2. Optional dependencies (langchain-google-genai, langchain-deepseek)
+#      are only imported when that backend is actually requested.
 
-def _build_openai_llm():
-    key = os.getenv("OPENAI_API_KEY")
-    if not key:
-        raise EnvironmentError("OPENAI_API_KEY not set in .env")
-    return ChatOpenAI(
-        model=os.getenv("OPENAI_MODEL", "gpt-4o"),
-        temperature=float(os.getenv("OPENAI_TEMPERATURE", "0.0")),
-        api_key=key,
-    )
+def _build_openai():
+    from ..backends.openai_backend import build_llm
+    return build_llm()
 
+def _build_gemini():
+    from ..backends.gemini_backend import build_llm
+    return build_llm()
 
-def _build_gemini_llm():
-    key = os.getenv("GEMINI_API_KEY")
-    if not key:
-        raise EnvironmentError("GEMINI_API_KEY not set in .env")
-    try:
-        from langchain_google_genai import ChatGoogleGenerativeAI
-    except ImportError:
-        raise ImportError(
-            "Install langchain-google-genai: pip install langchain-google-genai"
-        )
-    return ChatGoogleGenerativeAI(
-        model=os.getenv("GEMINI_MODEL", "gemini-1.5-pro"),
-        temperature=float(os.getenv("GEMINI_TEMPERATURE", "0.0")),
-        google_api_key=key,
-        convert_system_message_to_human=True,
-    )
-
-
-def _build_deepseek_llm():
-    key = os.getenv("DEEPSEEK_API_KEY")
-    if not key:
-        raise EnvironmentError("DEEPSEEK_API_KEY not set in .env")
-    # DeepSeek exposes an OpenAI-compatible API endpoint
-    return ChatOpenAI(
-        model=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),
-        temperature=float(os.getenv("DEEPSEEK_TEMPERATURE", "0.0")),
-        api_key=key,
-        base_url="https://api.deepseek.com/v1",
-    )
-
+def _build_deepseek():
+    from ..backends.deepseek_backend import build_llm
+    return build_llm()
 
 _BUILDERS = {
-    "openai":   _build_openai_llm,
-    "gemini":   _build_gemini_llm,
-    "deepseek": _build_deepseek_llm,
+    "openai":   _build_openai,
+    "gemini":   _build_gemini,
+    "deepseek": _build_deepseek,
+}
+
+# ── API key map (for checking availability without building the LLM) ──────────
+_KEY_MAP = {
+    "openai":   "OPENAI_API_KEY",
+    "gemini":   "GEMINI_API_KEY",
+    "deepseek": "DEEPSEEK_API_KEY",
 }
 
 
@@ -141,9 +123,4 @@ def get_available_models() -> list[ModelName]:
     Return only the models whose API keys are present in the environment.
     Safe to call without raising — models with missing keys are silently skipped.
     """
-    key_map = {
-        "openai":   "OPENAI_API_KEY",
-        "gemini":   "GEMINI_API_KEY",
-        "deepseek": "DEEPSEEK_API_KEY",
-    }
-    return [m for m in AVAILABLE_MODELS if os.getenv(key_map[m])]
+    return [m for m in AVAILABLE_MODELS if os.getenv(_KEY_MAP[m])]

@@ -13,7 +13,7 @@ Each result captures:
     - field-level correctness scores
 
 Usage:
-    from evaluator import run_evaluation
+    from llm_backend.llm_eval.evaluator import run_evaluation
     results = run_evaluation()                    # all models, all cases
     results = run_evaluation(models=["openai"])   # one model
     results = run_evaluation(category="spatial")  # one category
@@ -22,25 +22,25 @@ Usage:
 import time
 import logging
 from typing import Optional
+from dataclasses import dataclass, field as dc_field
 
 from langchain_core.exceptions import OutputParserException
 
-from ..schema import ParsedInstruction
-from .test_cases import TEST_CASES, TestCase, get_cases_by_category
-from ..edge_cases import (
+from ..schema import ParsedInstruction                      # up to llm_backend
+from .test_cases import TEST_CASES, TestCase, get_cases_by_category  # same folder
+from ..edge_cases import (                                  # up to llm_backend
     is_empty_instruction,
     is_too_vague,
     normalise_instruction,
     validate_parsed_result,
     make_vague_result,
 )
-from .model_registry import get_chain, get_available_models, MODEL_DISPLAY_NAMES
+from .model_registry import get_chain, get_available_models, MODEL_DISPLAY_NAMES  # same folder
 
 logger = logging.getLogger(__name__)
 
-# ── Result dataclass ───────────────────────────────────────────────────────────
-from dataclasses import dataclass, field as dc_field
 
+# ── Result dataclass ───────────────────────────────────────────────────────────
 
 @dataclass
 class EvalResult:
