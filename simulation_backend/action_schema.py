@@ -1,7 +1,7 @@
 """
 action_schema.py
 ----------------
-PB8-CMD: Robot action command schema.
+
 
 Defines the data contract between the task planner and the execution module.
 All downstream modules import from here — same pattern as schema.py for the LLM module.
@@ -12,8 +12,8 @@ Interface contract:
     Tracker       → logs each RobotCommand as a pipeline stage event
 
 Usage:
-    from execution.action_schema import RobotCommand, ActionPlan, CommandType
-    from execution.action_schema import plan_to_commands
+    from simulation_backend.action_schema import RobotCommand, ActionPlan, CommandType
+    from simulation_backend.action_schema import plan_to_commands
 """
 
 from enum import Enum

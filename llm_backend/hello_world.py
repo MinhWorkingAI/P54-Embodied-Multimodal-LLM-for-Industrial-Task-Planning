@@ -5,6 +5,8 @@ Basic connection test for the llm_backend module.
 Run this first to confirm your chosen backend is working
 before running the full parser.
 
+python -m llm_backend.hello_world
+
 Usage:
     python hello_world.py
     LLM_BACKEND=gemini       python hello_world.py

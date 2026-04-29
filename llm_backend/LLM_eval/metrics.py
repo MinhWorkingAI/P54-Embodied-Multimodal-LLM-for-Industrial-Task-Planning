@@ -18,8 +18,8 @@ Metrics computed per model:
 Metrics also broken down by use case category.
 
 Usage:
-    from evaluator import run_evaluation
-    from metrics import compute_metrics, print_metrics_table
+    from llm_backend.llm_eval.evaluator import run_evaluation
+    from llm_backend.llm_eval.metrics import import compute_metrics, print_metrics_table
 
     results = run_evaluation()
     metrics = compute_metrics(results)

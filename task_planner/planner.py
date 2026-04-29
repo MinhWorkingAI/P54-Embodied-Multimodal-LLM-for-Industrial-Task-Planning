@@ -29,7 +29,7 @@ import logging
 import sys
 import os
 from llm_backend.schema import ParsedInstruction, ActionType
-from execution.action_schema import ActionPlan, RobotCommand, CommandType, Position
+from simulation_backend.action_schema import ActionPlan, RobotCommand, CommandType, Position
 
 logger = logging.getLogger(__name__)
 

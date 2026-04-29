@@ -1,7 +1,6 @@
 """
 mock_robot.py
 -------------
-PB8-MOCK: Lightweight mock robot simulator for offline pipeline testing.
 
 Simulates robot behaviour without requiring PyBullet.
 Maintains internal state (position, held object, object map) and responds
@@ -12,7 +11,7 @@ when the real simulation is ready, swap MockRobot for RealRobot with no
 changes to the pipeline code.
 
 Usage:
-    from execution.mock_robot import MockRobot
+    from simulation_backend.mock_robot import MockRobot
 
     robot = MockRobot()
     robot.load_scene(scene)

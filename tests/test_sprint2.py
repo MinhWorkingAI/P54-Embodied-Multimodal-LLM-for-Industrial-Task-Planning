@@ -5,26 +5,22 @@ Unit tests for all Sprint 2 modules.
 All tests run without API calls or PyBullet.
 
 Run:
-    pytest test_sprint2.py -v
+    pytest tests/test_sprint2.py -v
 
 Coverage:
-    - action_schema.py  (RobotCommand, ActionPlan, plan_to_commands)
-    - mock_robot.py     (MockRobot all commands, state, edge cases)
-    - executor.py       (Executor success/failure flows)
-    - planner.py        (TaskPlanner all action types)
+    - simulation_backend/action_schema.py  (RobotCommand, ActionPlan, plan_to_commands)
+    - simulation_backend/mock_robot.py     (MockRobot all commands, state, edge cases)
+    - simulation_backend/executor.py       (Executor success/failure flows)
+    - task_planner/planner.py              (TaskPlanner all action types)
 """
-
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import pytest
 from llm_backend.schema import ParsedInstruction, ActionType, ConfidenceLevel
-from execution.action_schema import (
+from simulation_backend.action_schema import (
     RobotCommand, ActionPlan, CommandType, Position, plan_to_commands
 )
-from execution.mock_robot import MockRobot, CommandResult
-from execution.executor   import Executor
+from simulation_backend.mock_robot import MockRobot, CommandResult
+from simulation_backend.executor   import Executor
 from task_planner.planner import TaskPlanner
 
 

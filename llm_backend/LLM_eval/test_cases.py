@@ -14,7 +14,7 @@ Categories:
     edge_case       - Empty, vague, unknown objects, malformed input
 
 Usage:
-    from test_cases import TEST_CASES, get_cases_by_category
+    from llm_backend.llm_eval.test_cases import TEST_CASES
 """
 
 from typing import Optional
@@ -86,7 +86,7 @@ TEST_CASES: list[TestCase] = [
         description="Find maps to locate",
     ),
 
-    # ── SPATIAL ───────────────────────────────────────────────────────────────
+    # ── SPATIAL ───────────────
     TestCase(
         id="SP01",
         instruction="move the green block to the right of the workstation",

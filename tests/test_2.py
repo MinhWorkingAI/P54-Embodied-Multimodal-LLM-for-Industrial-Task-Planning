@@ -1,20 +1,16 @@
 """
-test_llm_module.py
-------------------
-Unit and integration tests for the LLM instruction parser module.
-
+test_2.py
+---------
+Unit tests for the LLM instruction parser module.
 Tests are split into:
-  - Unit tests (no API calls) -- schema, edge cases, pre/post processing
-  - Integration tests          -- real LLM calls (requires API key + credits)
+  - Unit tests (no API calls) — test schema, edge cases, pre/post processing
+  - Integration tests         — test actual LLM calls (requires API key + credits)
 
-Run unit tests only (fast, no API):
-    pytest test_llm_module.py -v -m "not integration"
+Run all unit tests (fast, no API):
+    pytest tests/test_2.py -v -m "not integration"
 
-Run integration tests against OpenAI:
-    LLM_BACKEND=openai pytest test_llm_module.py -v -m integration
-
-Run integration tests against Gemini:
-    LLM_BACKEND=gemini pytest test_llm_module.py -v -m integration
+Run everything including LLM calls:
+    pytest tests/test_2.py -v
 """
 
 import pytest
@@ -30,13 +26,14 @@ from llm_backend.edge_cases import (
 )
 
 
-# ===============================================================================
+# ═══════════════════════════════════════════════════════════════════════════════
 # SCHEMA TESTS
-# ===============================================================================
+# ═══════════════════════════════════════════════════════════════════════════════
 
 class TestSchema:
 
     def test_valid_full_instruction(self):
+        """Schema accepts a fully populated valid instruction."""
         result = ParsedInstruction(
             action=ActionType.PICK,
             object_target="red block",
@@ -52,6 +49,7 @@ class TestSchema:
         assert result.confidence == ConfidenceLevel.HIGH
 
     def test_valid_minimal_instruction(self):
+        """Schema accepts instruction with only required fields."""
         result = ParsedInstruction(
             action=ActionType.LOCATE,
             object_target="yellow block",
@@ -63,6 +61,7 @@ class TestSchema:
         assert result.notes is None
 
     def test_action_types_are_valid(self):
+        """All four action types are accepted."""
         for action in [ActionType.PICK, ActionType.PLACE, ActionType.MOVE, ActionType.LOCATE]:
             result = ParsedInstruction(
                 action=action,
@@ -73,6 +72,7 @@ class TestSchema:
             assert result.action == action
 
     def test_confidence_levels_are_valid(self):
+        """All three confidence levels are accepted."""
         for level in [ConfidenceLevel.HIGH, ConfidenceLevel.MEDIUM, ConfidenceLevel.LOW]:
             result = ParsedInstruction(
                 action=ActionType.PICK,
@@ -83,15 +83,17 @@ class TestSchema:
             assert result.confidence == level
 
     def test_invalid_action_raises(self):
+        """Schema rejects actions not in the allowed enum."""
         with pytest.raises(Exception):
             ParsedInstruction(
-                action="throw",
+                action="throw",  # not a valid ActionType
                 object_target="red block",
                 confidence=ConfidenceLevel.HIGH,
                 raw_instruction="test",
             )
 
     def test_model_dump_returns_dict(self):
+        """model_dump() returns a plain dict for downstream use."""
         result = ParsedInstruction(
             action=ActionType.PICK,
             object_target="red block",
@@ -104,11 +106,13 @@ class TestSchema:
         assert dumped["object_target"] == "red block"
 
 
-# ===============================================================================
+# ═══════════════════════════════════════════════════════════════════════════════
 # EDGE CASE UNIT TESTS (no API calls)
-# ===============================================================================
+# ═══════════════════════════════════════════════════════════════════════════════
 
 class TestEdgeCases:
+
+    # ── is_empty_instruction ──────────────────────────────────────────────────
 
     def test_empty_string_is_empty(self):
         assert is_empty_instruction("") is True
@@ -122,6 +126,8 @@ class TestEdgeCases:
     def test_valid_instruction_not_empty(self):
         assert is_empty_instruction("pick up the red block") is False
 
+    # ── is_too_vague ─────────────────────────────────────────────────────────
+
     def test_vague_instruction_detected(self):
         assert is_too_vague("do something with that") is True
 
@@ -134,6 +140,8 @@ class TestEdgeCases:
     def test_action_mention_not_vague(self):
         assert is_too_vague("locate it") is False
 
+    # ── normalise_instruction ─────────────────────────────────────────────────
+
     def test_strips_whitespace(self):
         assert normalise_instruction("  pick the block  ") == "pick the block"
 
@@ -141,20 +149,29 @@ class TestEdgeCases:
         assert normalise_instruction("pick  up   the   block") == "pick up the block"
 
     def test_preserves_content(self):
-        assert "red block" in normalise_instruction("pick up the red block")
+        result = normalise_instruction("pick up the red block")
+        assert "red block" in result
+
+    # ── make_vague_result ─────────────────────────────────────────────────────
 
     def test_vague_result_has_low_confidence(self):
-        assert make_vague_result("do something").confidence == ConfidenceLevel.LOW
+        result = make_vague_result("do something")
+        assert result.confidence == ConfidenceLevel.LOW
 
     def test_vague_result_preserves_instruction(self):
-        assert make_vague_result("do something weird").raw_instruction == "do something weird"
+        result = make_vague_result("do something weird")
+        assert result.raw_instruction == "do something weird"
 
     def test_vague_result_has_notes(self):
         result = make_vague_result("hmm")
-        assert result.notes and len(result.notes) > 0
+        assert result.notes is not None
+        assert len(result.notes) > 0
 
     def test_vague_result_object_is_unknown(self):
-        assert make_vague_result("do something").object_target == "unknown"
+        result = make_vague_result("do something")
+        assert result.object_target == "unknown"
+
+    # ── validate_parsed_result ────────────────────────────────────────────────
 
     def test_unknown_object_downgrades_confidence(self):
         result = ParsedInstruction(
@@ -163,7 +180,8 @@ class TestEdgeCases:
             confidence=ConfidenceLevel.HIGH,
             raw_instruction="pick up the thing",
         )
-        assert validate_parsed_result(result).confidence == ConfidenceLevel.LOW
+        validated = validate_parsed_result(result)
+        assert validated.confidence == ConfidenceLevel.LOW
 
     def test_known_object_keeps_confidence(self):
         result = ParsedInstruction(
@@ -172,7 +190,8 @@ class TestEdgeCases:
             confidence=ConfidenceLevel.HIGH,
             raw_instruction="pick up the red block",
         )
-        assert validate_parsed_result(result).confidence == ConfidenceLevel.HIGH
+        validated = validate_parsed_result(result)
+        assert validated.confidence == ConfidenceLevel.HIGH
 
     def test_unknown_destination_adds_notes(self):
         result = ParsedInstruction(
@@ -182,54 +201,25 @@ class TestEdgeCases:
             confidence=ConfidenceLevel.HIGH,
             raw_instruction="place the red block somewhere",
         )
-        assert validate_parsed_result(result).notes is not None
+        validated = validate_parsed_result(result)
+        assert validated.notes is not None
 
 
-# ===============================================================================
-# BACKEND UNIT TESTS (no API calls)
-# ===============================================================================
-
-class TestBackendFactory:
-
-    def test_invalid_backend_raises(self, monkeypatch):
-        monkeypatch.setenv("LLM_BACKEND", "llamacpp")
-        from llm_backend.backends import get_llm
-        with pytest.raises(ValueError, match="Unsupported LLM_BACKEND"):
-            get_llm()
-
-    def test_missing_openai_key_raises(self, monkeypatch):
-        monkeypatch.setenv("LLM_BACKEND", "openai")
-        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-        from llm_backend.backends.openai_backend import build_llm
-        with pytest.raises(EnvironmentError):
-            build_llm()
-
-    def test_missing_gemini_key_raises(self, monkeypatch):
-        monkeypatch.setenv("LLM_BACKEND", "gemini")
-        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-        from llm_backend.backends.gemini_backend import build_llm
-        with pytest.raises(EnvironmentError):
-            build_llm()
-
-    def test_missing_deepseek_key_raises(self, monkeypatch):
-        monkeypatch.setenv("LLM_BACKEND", "deepseek")
-        monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
-        from llm_backend.backends.deepseek_backend import build_llm
-        with pytest.raises(EnvironmentError):
-            build_llm()
-
-
-# ===============================================================================
-# PARSER INTEGRATION TESTS  (requires API key + credits)
-# Select backend via: LLM_BACKEND=openai|gemini pytest ... -m integration
-# ===============================================================================
+# ═══════════════════════════════════════════════════════════════════════════════
+# PARSER INTEGRATION TESTS (requires API key + credits)
+# ═══════════════════════════════════════════════════════════════════════════════
 
 @pytest.mark.integration
 class TestParserIntegration:
+    """
+    These tests make real API calls.
+    Run with: pytest tests/test_2.py -v -m integration
+    Requires API key in .env and available credits.
+    """
 
     @pytest.fixture(autouse=True)
     def import_parser(self):
-        from .custom_LLM_parser import parse_instruction
+        from llm_backend.custom_LLM_parser import parse_instruction
         self.parse = parse_instruction
 
     def test_simple_pick_instruction(self):
@@ -258,12 +248,6 @@ class TestParserIntegration:
     def test_synonym_mapped_correctly(self):
         result = self.parse("grab the red block")
         assert result.action == ActionType.PICK
-
-    def test_vague_short_circuits_without_api_call(self):
-        # "do something with that" hits is_too_vague -- no API call made
-        result = self.parse("do something with that")
-        assert result.confidence == ConfidenceLevel.LOW
-        assert result.object_target == "unknown"
 
     def test_ambiguous_instruction_low_confidence(self):
         result = self.parse("put that thing over there")

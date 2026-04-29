@@ -1,14 +1,12 @@
 """
 main.py
 -------
-PB10-SCAFFOLD: End-to-end pipeline entry point.
-
 Wires all modules together:
     User instruction
-        → LLM parse          (llm_module/parser.py       — REAL)
+        → LLM parse          (llm_backend/custom_LLM_parser.py)
         → Vision lookup      (stub → real when ready)
-        → Task plan          (task_planner/planner.py    — REAL)
-        → Execution          (execution/executor.py      — REAL via MockRobot)
+        → Task plan          (task_planner/planner.py)
+        → Execution          (simulation_backend/executor.py)
         → Feedback           (inline validation)
 
 All stages are logged via tracker.py with a unique task_id.
@@ -45,9 +43,9 @@ from llm_backend.custom_LLM_parser     import parse_instruction
 from llm_backend.schema     import ParsedInstruction, ConfidenceLevel
 from llm_backend.tracker    import PipelineTracker
 from task_planner.planner  import TaskPlanner
-from execution.mock_robot  import MockRobot
-from execution.executor    import Executor
-from execution.action_schema import plan_to_commands
+from simulation_backend.mock_robot  import MockRobot
+from simulation_backend.executor    import Executor
+from simulation_backend.action_schema import plan_to_commands
 
 logging.basicConfig(
     level=logging.WARNING,  # Set to DEBUG for verbose output
@@ -281,7 +279,7 @@ def run_interactive(model: str = "openai") -> None:
 
     while True:
         try:
-            instruction = input("🤖  Instruction: ").strip()
+            instruction = input("Instruction: ").strip()
             if not instruction:
                 continue
             if instruction.lower() in ("quit", "exit", "q"):
@@ -307,9 +305,9 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Multimodal LLM Industrial Task Planning Pipeline")
     ap.add_argument("instruction", nargs="?", help="Instruction to execute")
     ap.add_argument("--interactive", "-i", action="store_true", help="Interactive mode")
-    ap.add_argument("--model", "-m", default="openai",
-                    choices=["openai", "gemini", "deepseek"],
-                    help="LLM model to use (default: openai)")
+    ap.add_argument("--model", "-m", default=os.getenv("LLM_BACKEND", "openai"),
+                    choices=["openai", "gemini", "deepseek", "huggingface"],
+                    help="LLM model to use (default: reads LLM_BACKEND from .env, fallback openai)")
     ap.add_argument("--quiet", "-q", action="store_true", help="Suppress verbose output")
     args = ap.parse_args()
 

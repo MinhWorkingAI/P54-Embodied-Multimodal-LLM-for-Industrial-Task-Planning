@@ -13,7 +13,8 @@ Backend is selected at runtime via the LLM_BACKEND environment variable:
 
 All API credentials and model config are owned entirely by the backend
 modules (backends/openai_backend.py, backends/gemini_backend.py,
-backends/deepseek_backend.py). This file contains zero credential logic.
+backends/deepseek_backend.py, backends/huggingface_backend.py). 
+This file contains zero credential logic.
 
 Full pipeline per call:
     1. Pre-check  : reject empty instructions immediately.
@@ -23,7 +24,7 @@ Full pipeline per call:
     5. Post-check : downgrade confidence for unknown objects/destinations.
 
 Usage:
-    from custom_LLM_parser import parse_instruction
+    from llm_backend.custom_LLM_parser import parse_instruction
     result = parse_instruction("pick up the red block")
 """
 

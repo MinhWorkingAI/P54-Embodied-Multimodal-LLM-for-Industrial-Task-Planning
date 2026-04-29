@@ -1,7 +1,6 @@
 """
 executor.py
 -----------
-Execution module — runs an ActionPlan on a robot (mock or real).
 
 Takes an ActionPlan from the task planner and executes each command
 sequentially, logging results to the pipeline tracker at each step.
@@ -10,9 +9,9 @@ Designed so that MockRobot can be swapped for a real PyBullet robot
 with zero changes to this file.
 
 Usage:
-    from execution.executor import Executor
-    from execution.mock_robot import MockRobot
-    from execution.action_schema import ActionPlan
+    from simulation_backend.executor import Executor
+    from simulation_backend.mock_robot import MockRobot
+    from simulation_backend.action_schema import ActionPlan
 
     robot    = MockRobot()
     robot.load_scene(scene)
@@ -26,8 +25,8 @@ import logging
 import time
 from typing import Optional
 
-from execution.action_schema import ActionPlan, CommandType, RobotCommand
-from execution.mock_robot import MockRobot, CommandResult
+from simulation_backend.action_schema import ActionPlan, CommandType, RobotCommand
+from simulation_backend.mock_robot import MockRobot, CommandResult
 
 logger = logging.getLogger(__name__)
 
