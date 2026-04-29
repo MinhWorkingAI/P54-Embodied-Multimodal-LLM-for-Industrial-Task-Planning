@@ -10,6 +10,7 @@ Wires all modules together:
         → Feedback           (inline validation)
 
 All stages are logged via tracker.py with a unique task_id.
+LLM backend is controlled by LLM_BACKEND in .env — not a CLI flag.
 
 Stubs are clearly marked with # STUB — swap for real module when ready.
 Real vision module import is commented in and ready to activate.
@@ -21,8 +22,8 @@ Usage:
     # Interactive mode
     python main.py --interactive
 
-    # Use specific model
-    python main.py --model gemini "locate the yellow block"
+    # Suppress output
+    python main.py --quiet "locate the yellow block"
 """
 
 import sys
@@ -87,7 +88,6 @@ def get_scene() -> dict:
 
 def run_pipeline(
     instruction:     str,
-    model:           str = "openai",
     verbose:         bool = True,
     tracker:         PipelineTracker | None = None,
 ) -> dict:
@@ -96,7 +96,6 @@ def run_pipeline(
 
     Args:
         instruction: Natural language task instruction
-        model:       LLM model to use ("openai", "gemini", "deepseek")
         verbose:     Print progress to stdout
         tracker:     PipelineTracker instance for cross-domain logging
 
@@ -106,14 +105,16 @@ def run_pipeline(
     if tracker is None:
         tracker = PipelineTracker()
 
+    _backend = os.getenv("LLM_BACKEND", "openai")
+
     # ── Register task ──────────────────────────────────────────────────────────
-    task_id = tracker.new_task(instruction, model=model)
+    task_id = tracker.new_task(instruction, model=_backend)
 
     if verbose:
         print(f"\n{SEP}")
         print(f"  PIPELINE START")
         print(f"  Instruction : {instruction}")
-        print(f"  Model       : {model}")
+        print(f"  Model       : {_backend}")
         print(f"  Task ID     : {task_id}")
         print(SEP)
 
@@ -127,7 +128,7 @@ def run_pipeline(
 
     # ══ STAGE 1: LLM PARSE ════════════════════════════════════════════════════
     if verbose:
-        print(f"\n  [1/5] LLM Parse ({model})")
+        print(f"\n  [1/5] LLM Parse ({_backend})")
 
     try:
         t0     = time.perf_counter()
@@ -270,11 +271,12 @@ def run_pipeline(
 
 # ── Interactive mode ───────────────────────────────────────────────────────────
 
-def run_interactive(model: str = "openai") -> None:
-    tracker = PipelineTracker()
+def run_interactive() -> None:
+    tracker  = PipelineTracker()
+    _backend = os.getenv("LLM_BACKEND", "openai")
     print(f"\n{SEP}")
     print("  Multimodal LLM — Industrial Task Planning Pipeline")
-    print(f"  Model: {model}  |  Type 'quit' to exit  |  Type 'status' for summary")
+    print(f"  Model: {_backend}  |  Type 'quit' to exit  |  Type 'status' for summary")
     print(SEP + "\n")
 
     while True:
@@ -289,7 +291,7 @@ def run_interactive(model: str = "openai") -> None:
             if instruction.lower() == "status":
                 tracker.print_summary()
                 continue
-            run_pipeline(instruction, model=model, verbose=True, tracker=tracker)
+            run_pipeline(instruction, verbose=True, tracker=tracker)
 
         except KeyboardInterrupt:
             print("\nGoodbye!")
@@ -305,15 +307,12 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Multimodal LLM Industrial Task Planning Pipeline")
     ap.add_argument("instruction", nargs="?", help="Instruction to execute")
     ap.add_argument("--interactive", "-i", action="store_true", help="Interactive mode")
-    ap.add_argument("--model", "-m", default=os.getenv("LLM_BACKEND", "openai"),
-                    choices=["openai", "gemini", "deepseek", "huggingface"],
-                    help="LLM model to use (default: reads LLM_BACKEND from .env, fallback openai)")
     ap.add_argument("--quiet", "-q", action="store_true", help="Suppress verbose output")
     args = ap.parse_args()
 
     if args.interactive:
-        run_interactive(model=args.model)
+        run_interactive()
     elif args.instruction:
-        run_pipeline(args.instruction, model=args.model, verbose=not args.quiet)
+        run_pipeline(args.instruction, verbose=not args.quiet)
     else:
         ap.print_help()
