@@ -29,11 +29,6 @@ def euclidean_distance(point1: List[int], point2: List[int]) -> float:
 def compute_relationships(scene_data: Dict[str, Any], near_threshold: float = 160.0) -> List[str]:
     """
     Compute pairwise spatial relationships between objects.
-
-    Rules:
-    - If x1 < x2, object1 is left of object2
-    - If x1 > x2, object1 is right of object2
-    - If distance <= near_threshold, object1 is near object2
     """
     relationships = []
     scene = scene_data.get("scene", {})
@@ -50,6 +45,7 @@ def compute_relationships(scene_data: Dict[str, Any], near_threshold: float = 16
             x1, y1 = center1
             x2, y2 = center2
 
+            # Left / Right
             if x1 < x2:
                 relationships.append(f"{obj1} is left of {obj2}")
                 relationships.append(f"{obj2} is right of {obj1}")
@@ -57,6 +53,7 @@ def compute_relationships(scene_data: Dict[str, Any], near_threshold: float = 16
                 relationships.append(f"{obj1} is right of {obj2}")
                 relationships.append(f"{obj2} is left of {obj1}")
 
+            # Near
             distance = euclidean_distance(center1, center2)
             if distance <= near_threshold:
                 relationships.append(f"{obj1} is near {obj2}")
@@ -73,6 +70,15 @@ def build_spatial_output(scene_data: Dict[str, Any]) -> Dict[str, Any]:
         "image_id": scene_data.get("image_id", "unknown"),
         "relationships": compute_relationships(scene_data)
     }
+
+
+def get_spatial_relationships(filename: str = "scene_representation.json") -> List[str]:
+    """
+    Load scene data and return spatial relationships.
+    This allows other modules (planner, validation) to use this directly.
+    """
+    scene_data = load_json(filename)
+    return compute_relationships(scene_data)
 
 
 def main() -> None:
