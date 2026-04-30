@@ -668,5 +668,27 @@
       }
     },
     "completed_at": "2026-04-29T17:05:37.876588+00:00"
+  },
+  {
+    "task_id": "invalid_action_001",
+    "instruction": "pick up the yellow block",
+    "model": "vision_validation",
+    "created_at": "2026-04-30T16:11:54.553777",
+    "status": "failed",
+    "stages": {
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "failed",
+        "payload": {
+          "object_target": "yellow block",
+          "available_objects": [
+            "red block",
+            "blue tray",
+            "green block"
+          ]
+        },
+        "error": "Object 'yellow block' not found in scene"
+      }
+    }
   }
 ]
