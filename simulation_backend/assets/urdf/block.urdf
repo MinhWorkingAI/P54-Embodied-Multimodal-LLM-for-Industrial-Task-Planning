@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!--
+block.urdf
+----------
+Generic coloured block for pick and place simulation.
+Shared by all four blocks (red, blue, green, yellow).
+Colour is applied at runtime via changeVisualShape() in object_loader.py
+using the RGBA values from scene_config.yaml.
+
+Dimensions (metres):
+    0.05 x 0.05 x 0.05 (5cm cube)
+
+Origin is at the centre of the cube.
+Place in scene_config.yaml at z=0.025 so base sits flush on table surface.
+
+Mass = 0.1 kg — dynamic object, affected by gravity and physics.
+Uses primitive box geometry only — no mesh files required.
+-->
+
+<robot name="block">
+
+  <link name="base_link">
+
+    <!-- Visual — primitive box, no mesh file needed -->
+    <visual>
+      <origin xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0"/>
+      </material>
+    </visual>
+
+    <!-- Collision — same primitive box -->
+    <collision>
+      <origin xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+    </collision>
+
+    <!-- Inertial — 0.1kg solid cube -->
+    <!-- ixx = iyy = izz = (1/12) * 0.1 * (0.05^2 + 0.05^2) = 0.0000042 -->
+    <inertial>
+      <origin xyz="0.0 0.0 0.0"/>
+      <mass value="0.1"/>
+      <inertia ixx="0.0000042" ixy="0.0" ixz="0.0"
+               iyy="0.0000042" iyz="0.0"
+               izz="0.0000042"/>
+    </inertial>
+
+  </link>
+
+</robot>

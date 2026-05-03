@@ -1,0 +1,210 @@
+# scene_config.yaml
+# ------------------
+# Central configuration for the simulation backend.
+# All scenery, object, camera, physics, vision, and display settings live here.
+# Changes here take effect on the next simulation startup — no code changes needed.
+#
+# Units:
+#   positions   : metres (m)
+#   dimensions  : metres (m)
+#   mass        : kilograms (kg)
+#   friction    : dimensionless coefficient
+#   rgba colors : [red, green, blue, alpha] each 0.0-1.0
+#   angles      : radians
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PHYSICS
+# ══════════════════════════════════════════════════════════════════════════════
+physics:
+  gravity:        [0.0, 0.0, -9.81]   # world gravity vector (x, y, z)
+  timestep:       0.00416             # simulation timestep in seconds (1/240)
+  solver_iterations: 150              # constraint solver iterations — higher = more accurate
+  real_time: true                     # true = wall-clock speed, false = as fast as possible
+
+# ══════════════════════════════════════════════════════════════════════════════
+# WORKSPACE
+# ══════════════════════════════════════════════════════════════════════════════
+workspace:
+  # Table surface dimensions
+  width_m:        2.0                 # X axis extent
+  depth_m:        1.5                 # Y axis extent
+  thickness_m:    0.05                # table top thickness
+  height_m:       0.75               # table height from floor to surface top
+
+  # Table position — centre of table surface in world coordinates
+  position:       [0.0, 0.0, 0.0]
+
+  # Table surface appearance
+  color:          [0.76, 0.60, 0.42, 1.0]   # wooden brown
+  urdf:           simulation_backend/assets/urdf/table.urdf
+
+  # Physical walls around the workspace perimeter
+  walls:
+    enabled:      true
+    thickness_m:  0.02
+    height_m:     0.15               # wall height above table surface
+    color:        [0.85, 0.85, 0.85, 0.6]   # light grey, semi-transparent
+
+  # Floor beneath the table
+  floor:
+    enabled:      true
+    color:        [0.5, 0.5, 0.5, 1.0]
+
+# ══════════════════════════════════════════════════════════════════════════════
+# CAMERA
+# ══════════════════════════════════════════════════════════════════════════════
+# Eye-to-hand only — fixed mount, position defined here.
+# Mode switching (eye_in_hand) is reserved for future config extension.
+camera:
+  mode:           eye_to_hand
+
+  # Camera mount position in world coordinates
+  position:       [1.5, 0.0, 1.8]    # x, y, z in metres
+
+  # Point the camera looks at
+  target:         [0.0, 0.0, 0.0]
+
+  # Camera orientation — which direction is "up" in the image
+  up_vector:      [0.0, 0.0, 1.0]
+
+  # Lens settings
+  fov:            60                  # field of view in degrees
+  aspect_ratio:   1.333               # width / height (640/480)
+  near_val:       0.1                 # near clipping plane in metres
+  far_val:        10.0                # far clipping plane in metres
+
+  # Capture resolution
+  width:          640
+  height:         480
+
+# ══════════════════════════════════════════════════════════════════════════════
+# DISPLAY (display_scene.py only)
+# ══════════════════════════════════════════════════════════════════════════════
+display:
+  # PyBullet GUI window
+  gui:
+    enabled:      true
+    background_color: [0.15, 0.15, 0.15]   # dark grey background
+
+  # Object labels floating above objects in the PyBullet GUI
+  # Disable if labels are hard to read or cluttering the view
+  object_labels:
+    enabled:      true
+    color:        [1.0, 1.0, 1.0]    # white text
+    size:         1.2                 # text size multiplier
+    offset_z:     0.15               # height above object in metres
+    # Set enabled: false to remove all labels without deleting this config
+
+  # Robot state debug text in PyBullet GUI
+  robot_state_overlay:
+    enabled:      true
+    position:     [0.0, 0.0, 1.5]   # world position where text appears
+    color:        [0.0, 1.0, 0.5]   # green text
+    size:         1.0
+
+  # OpenCV camera feed window
+  opencv_window:
+    enabled:      true
+    window_name:  "Simulation Camera Feed"
+    show_detections:  true           # draw bounding boxes if detector is active
+    show_segmentation: true          # overlay segmentation mask if enabled
+    update_rate_hz:   30             # how often to refresh the OpenCV window
+
+  # Terminal output during display_scene.py run
+  terminal:
+    enabled:      true
+    print_scene:  true               # print full scene dict each update
+    print_robot_state: true          # print robot position, held object
+    update_rate_hz: 2                # terminal prints per second (keep low)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# OBJECTS
+# ══════════════════════════════════════════════════════════════════════════════
+# All objects loaded into the simulation workspace.
+# Add new objects here — no code changes required.
+# Positions are relative to the table surface centre (0, 0, 0).
+objects:
+
+  - id:           obj_001
+    label:        red block
+    urdf:         simulation_backend/assets/urdf/block.urdf
+    color:        [1.0, 0.0, 0.0, 1.0]
+    position:     [0.45, -0.20, 0.05]    # x, y, z above table surface
+    orientation:  [0.0, 0.0, 0.0, 1.0]  # quaternion [x, y, z, w]
+    mass_kg:      0.1
+    graspable:    true
+    attributes:
+      color:      red
+      shape:      cube
+
+  - id:           obj_002
+    label:        blue block
+    urdf:         simulation_backend/assets/urdf/block.urdf
+    color:        [0.0, 0.0, 1.0, 1.0]
+    position:     [0.60, 0.10, 0.05]
+    orientation:  [0.0, 0.0, 0.0, 1.0]
+    mass_kg:      0.1
+    graspable:    true
+    attributes:
+      color:      blue
+      shape:      cube
+
+  - id:           obj_003
+    label:        green block
+    urdf:         simulation_backend/assets/urdf/block.urdf
+    color:        [0.0, 0.8, 0.0, 1.0]
+    position:     [0.30, 0.20, 0.05]
+    orientation:  [0.0, 0.0, 0.0, 1.0]
+    mass_kg:      0.1
+    graspable:    true
+    attributes:
+      color:      green
+      shape:      cube
+
+  - id:           obj_004
+    label:        yellow block
+    urdf:         simulation_backend/assets/urdf/block.urdf
+    color:        [1.0, 1.0, 0.0, 1.0]
+    position:     [0.55, -0.10, 0.05]
+    orientation:  [0.0, 0.0, 0.0, 1.0]
+    mass_kg:      0.1
+    graspable:    true
+    attributes:
+      color:      yellow
+      shape:      cube
+
+  - id:           obj_005
+    label:        left tray
+    urdf:         simulation_backend/assets/urdf/tray.urdf
+    color:        [0.55, 0.55, 0.55, 1.0]
+    position:     [0.70, 0.30, 0.01]
+    orientation:  [0.0, 0.0, 0.0, 1.0]
+    mass_kg:      0.0                    # 0 = static, fixed to table
+    graspable:    false
+    attributes:
+      color:      grey
+      shape:      tray
+
+  - id:           obj_006
+    label:        right tray
+    urdf:         simulation_backend/assets/urdf/tray.urdf
+    color:        [0.55, 0.55, 0.55, 1.0]
+    position:     [0.70, -0.30, 0.01]
+    orientation:  [0.0, 0.0, 0.0, 1.0]
+    mass_kg:      0.0
+    graspable:    false
+    attributes:
+      color:      grey
+      shape:      tray
+
+  - id:           obj_007
+    label:        workstation
+    urdf:         simulation_backend/assets/urdf/workstation.urdf
+    color:        [0.35, 0.35, 0.35, 1.0]
+    position:     [0.80, 0.00, 0.00]
+    orientation:  [0.0, 0.0, 0.0, 1.0]
+    mass_kg:      0.0
+    graspable:    false
+    attributes:
+      color:      dark grey
+      shape:      workstation
