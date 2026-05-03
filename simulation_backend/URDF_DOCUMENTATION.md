@@ -12,8 +12,6 @@ This document covers all URDF (Unified Robot Description Format) files used in t
 
 URDF is an XML-based format used by ROS and PyBullet to describe the physical, visual, and collision properties of robots and objects in a simulation environment. Each URDF defines one or more **links** (rigid bodies) and optionally **joints** (connections between links).
 
-All URDFs in this package use **primitive geometry only** (`<box>`, `<sphere>`, `<cylinder>`) and contain no external mesh file dependencies (`.obj`, `.stl`, `.dae`). This makes them fully self-contained and portable across all platforms without additional asset downloads.
-
 ---
 
 ## Authorship and Licence
