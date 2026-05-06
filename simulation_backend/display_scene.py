@@ -19,7 +19,7 @@ What is shown:
         - Robot state debug text overlay (configurable)
 
     OpenCV camera feed window:
-        - Live camera frame from the configured eye-to-hand camera
+        - Live camera frame from the Camera class (camera.py)
         - Detection bounding boxes overlaid (if VISION_DETECTOR is set)
         - Segmentation mask overlay (if SEGMENTATION_MASK=true)
 
@@ -27,21 +27,21 @@ What is shown:
         - Current scene dict printed at configured rate
         - Robot state (position, held object) printed at configured rate
 
-Press Q in either window or Ctrl+C in terminal to exit.
+Press Q in the camera window or Ctrl+C in terminal to exit.
 
 Config:
     All display settings are in scene_config.yaml under the 'display' key.
-    Object labels can be disabled by setting display.object_labels.enabled: false
+    Camera settings are under the 'camera' key — owned entirely by Camera.
+    Set VISION_DETECTOR in .env to activate a primary detector.
+    Set SEGMENTATION_MASK=true in .env to enable the seg mask overlay.
 """
 
 import os
-import sys
 import time
 import logging
 import signal
 
 import pybullet as p
-import numpy as np
 import cv2
 import yaml
 
@@ -93,32 +93,30 @@ def _connect_gui() -> int:
 # ── Object label overlays ──────────────────────────────────────────────────────
 
 def _add_object_labels(
-    client:   int,
+    client:    int,
     registry,
     label_cfg: dict,
 ) -> list[int]:
     """
     Add floating debug text labels above each object in the PyBullet GUI.
 
-    Returns list of debug item IDs so they can be removed if needed.
+    Returns list of debug item IDs so they can be removed on cleanup.
     Controlled by display.object_labels.enabled in scene_config.yaml.
     """
     if not label_cfg.get("enabled", True):
         logger.info("Object labels disabled in config.")
         return []
 
-    color     = label_cfg.get("color", [1.0, 1.0, 1.0])
-    size      = label_cfg.get("size", 1.2)
-    offset_z  = label_cfg.get("offset_z", 0.15)
+    color    = label_cfg.get("color",    [1.0, 1.0, 1.0])
+    size     = label_cfg.get("size",     1.2)
+    offset_z = label_cfg.get("offset_z", 0.15)
 
     debug_ids = []
     for entry in registry.all_entries():
         x, y, z = entry.position
-        text_pos = [x, y, z + offset_z]
-
         debug_id = p.addUserDebugText(
             text=entry.label,
-            textPosition=text_pos,
+            textPosition=[x, y, z + offset_z],
             textColorRGB=color,
             textSize=size,
             physicsClientId=client,
@@ -138,16 +136,16 @@ def _remove_object_labels(client: int, debug_ids: list[int]) -> None:
 # ── Robot state overlay ────────────────────────────────────────────────────────
 
 def _update_robot_state_overlay(
-    client:     int,
-    overlay_id: int | None,
-    state_text: str,
+    client:      int,
+    overlay_id:  int | None,
+    state_text:  str,
     overlay_cfg: dict,
-) -> int:
+) -> int | None:
     """
     Update the robot state debug text in the PyBullet GUI.
 
-    Creates or replaces the debug text item each frame.
-    Returns the new debug item ID.
+    Removes the previous text item and creates a new one each frame so
+    the position and content stay current. Returns the new item ID.
     """
     if not overlay_cfg.get("enabled", True):
         return overlay_id
@@ -155,93 +153,14 @@ def _update_robot_state_overlay(
     if overlay_id is not None:
         p.removeUserDebugItem(overlay_id, physicsClientId=client)
 
-    position = overlay_cfg.get("position", [0.0, 0.0, 1.5])
-    color    = overlay_cfg.get("color", [0.0, 1.0, 0.5])
-    size     = overlay_cfg.get("size", 1.0)
-
     new_id = p.addUserDebugText(
         text=state_text,
-        textPosition=position,
-        textColorRGB=color,
-        textSize=size,
+        textPosition=overlay_cfg.get("position", [0.0, 0.0, 1.5]),
+        textColorRGB=overlay_cfg.get("color",    [0.0, 1.0, 0.5]),
+        textSize=overlay_cfg.get("size",          1.0),
         physicsClientId=client,
     )
     return new_id
-
-
-# ── Camera capture ─────────────────────────────────────────────────────────────
-
-def _capture_frame(client: int, cam_cfg: dict) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Capture a frame from the configured camera.
-
-    Returns:
-        (rgb_frame, depth_buffer, seg_mask) as numpy arrays
-    """
-    position  = cam_cfg.get("position", [1.5, 0.0, 1.8])
-    target    = cam_cfg.get("target",   [0.0, 0.0, 0.0])
-    up_vector = cam_cfg.get("up_vector", [0.0, 0.0, 1.0])
-    fov       = cam_cfg.get("fov", 60)
-    aspect    = cam_cfg.get("aspect_ratio", 1.333)
-    near      = cam_cfg.get("near_val", 0.1)
-    far       = cam_cfg.get("far_val",  10.0)
-    width     = cam_cfg.get("width",  640)
-    height    = cam_cfg.get("height", 480)
-
-    view_matrix = p.computeViewMatrix(
-        cameraEyePosition=position,
-        cameraTargetPosition=target,
-        cameraUpVector=up_vector,
-        physicsClientId=client,
-    )
-    proj_matrix = p.computeProjectionMatrixFOV(
-        fov=fov, aspect=aspect,
-        nearVal=near, farVal=far,
-        physicsClientId=client,
-    )
-
-    width_ret, height_ret, rgba, depth, seg = p.getCameraImage(
-        width=width,
-        height=height,
-        viewMatrix=view_matrix,
-        projectionMatrix=proj_matrix,
-        physicsClientId=client,
-    )
-
-    # Reshape and convert
-    rgba_img  = np.reshape(rgba,  (height, width, 4)).astype(np.uint8)
-    rgb_img   = rgba_img[:, :, :3]
-    bgr_img   = cv2.cvtColor(rgb_img, cv2.COLOR_RGB2BGR)
-    depth_arr = np.reshape(depth, (height, width)).astype(np.float32)
-    seg_arr   = np.reshape(seg,   (height, width)).astype(np.int32)
-
-    return bgr_img, depth_arr, seg_arr
-
-
-# ── Segmentation overlay ───────────────────────────────────────────────────────
-
-def _overlay_segmentation(
-    frame:    np.ndarray,
-    seg_mask: np.ndarray,
-    registry,
-) -> np.ndarray:
-    """
-    Overlay segmentation mask on the OpenCV frame.
-    Each object gets a semi-transparent colour overlay using its
-    registered colour.
-    """
-    overlay = frame.copy()
-
-    for entry in registry.all_entries():
-        mask = (seg_mask == entry.body_id)
-        if not mask.any():
-            continue
-
-        r, g, b = entry.color[0], entry.color[1], entry.color[2]
-        overlay[mask] = [int(b * 255), int(g * 255), int(r * 255)]
-
-    # Blend with original
-    return cv2.addWeighted(frame, 0.5, overlay, 0.5, 0)
 
 
 # ── Terminal output ────────────────────────────────────────────────────────────
@@ -271,17 +190,17 @@ def run() -> None:
     ws_cfg      = cfg.get("workspace", {})
     obj_cfg     = cfg.get("objects", [])
 
-    label_cfg   = display_cfg.get("object_labels", {})
-    overlay_cfg = display_cfg.get("robot_state_overlay", {})
-    cv_cfg      = display_cfg.get("opencv_window", {})
-    term_cfg    = display_cfg.get("terminal", {})
+    label_cfg   = display_cfg.get("object_labels",       {})
+    overlay_cfg = display_cfg.get("robot_state_overlay",  {})
+    cv_cfg      = display_cfg.get("opencv_window",        {})
+    term_cfg    = display_cfg.get("terminal",             {})
 
     # ── Connect to PyBullet GUI ────────────────────────────────────────────────
     client = _connect_gui()
 
     # ── Build workspace and load objects ───────────────────────────────────────
-    from simulation_backend.simulation_environment.workspace import Workspace
-    from simulation_backend.simulation_environment.object_loader import ObjectLoader
+    from simulation_backend.simulation_environment.workspace       import Workspace
+    from simulation_backend.simulation_environment.object_loader   import ObjectLoader
     from simulation_backend.simulation_environment.object_registry import ObjectRegistry
 
     registry  = ObjectRegistry()
@@ -291,43 +210,57 @@ def run() -> None:
     loader = ObjectLoader(client, obj_cfg, registry)
     loader.load_all()
 
-    # ── Add object labels to GUI ───────────────────────────────────────────────
+    # ── Add object labels to PyBullet GUI ─────────────────────────────────────
     label_ids = _add_object_labels(client, registry, label_cfg)
 
-    # ── Build initial scene for display ───────────────────────────────────────
+    # ── Scene builder + ground truth ──────────────────────────────────────────
     from simulation_backend.simulation_environment.scene_builder import SceneBuilder
-    from simulation_backend.vision.ground_truth import GroundTruth
+    from simulation_backend.vision.ground_truth                  import GroundTruth
 
     ground_truth = GroundTruth(client, registry)
     builder      = SceneBuilder(registry)
 
-    # ── Segmentation setup ─────────────────────────────────────────────────────
+    # ── Camera (replaces the old _capture_frame helper) ───────────────────────
+    from simulation_backend.vision.camera import Camera
+
+    camera = Camera(physics_client=client, config=cam_cfg)
+    logger.info(f"Camera ready: {camera}")
+
+    # ── Primary detector (optional — set VISION_DETECTOR in .env) ─────────────
+    from simulation_backend.vision.detection_base import get_detector
+
+    detector = get_detector(registry=registry, config=cfg)
+    if detector:
+        logger.info(f"Primary detector active: {detector}")
+    else:
+        logger.info("No primary detector set (VISION_DETECTOR not set).")
+
+    # ── Segmentation setup (optional — set SEGMENTATION_MASK=true in .env) ────
     seg_enabled = os.getenv("SEGMENTATION_MASK", "false").lower() == "true"
     if seg_enabled:
-        from simulation_backend.vision.segmentation import Segmentation
-        segmentation = Segmentation(client, registry)
-        logger.info("Segmentation mask enabled.")
-    else:
-        segmentation = None
+        logger.info("Segmentation mask overlay enabled.")
 
-    # ── OpenCV window setup ────────────────────────────────────────────────────
-    cv_enabled   = cv_cfg.get("enabled", True)
-    window_name  = cv_cfg.get("window_name", "Simulation Camera Feed")
-    cv_rate      = cv_cfg.get("update_rate_hz", 30)
+    # ── OpenCV window setup ───────────────────────────────────────────────────
+    cv_enabled  = cv_cfg.get("enabled",        True)
+    window_name = cv_cfg.get("window_name",    "Simulation Camera Feed")
+    cv_rate     = cv_cfg.get("update_rate_hz", 30)
+
     if cv_enabled:
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
 
     # ── Timing ────────────────────────────────────────────────────────────────
-    term_rate         = term_cfg.get("update_rate_hz", 2)
-    last_cv_time      = 0.0
-    last_term_time    = 0.0
-    robot_overlay_id  = None
+    term_rate        = term_cfg.get("update_rate_hz", 2)
+    last_cv_time     = 0.0
+    last_term_time   = 0.0
+    robot_overlay_id = None
 
     logger.info("Display scene running. Press Q in camera window or Ctrl+C to exit.")
     print("\n" + "=" * 60)
     print("  simulation_backend — Display Scene")
-    print(f"  Objects loaded: {len(registry)}")
-    print(f"  Segmentation:   {seg_enabled}")
+    print(f"  Objects loaded:  {len(registry)}")
+    print(f"  Camera:          {camera.width}×{camera.height}  fov={cam_cfg.get('fov', 60)}°")
+    print(f"  Detector:        {detector.name if detector else 'none'}")
+    print(f"  Segmentation:    {seg_enabled}")
     print("  Press Q in the camera window or Ctrl+C to exit.")
     print("=" * 60 + "\n")
 
@@ -337,13 +270,33 @@ def run() -> None:
 
         # ── OpenCV update ──────────────────────────────────────────────────────
         if cv_enabled and (now - last_cv_time) >= 1.0 / cv_rate:
-            frame, depth, seg_mask = _capture_frame(client, cam_cfg)
 
-            # Segmentation overlay
+            # Camera.capture() returns a CameraFrame with .bgr, .depth, .seg
+            cam_frame = camera.capture()
+            display   = cam_frame.bgr.copy()
+
+            # Segmentation mask overlay — colour each object by its registry colour
             if seg_enabled and cv_cfg.get("show_segmentation", True):
-                frame = _overlay_segmentation(frame, seg_mask, registry)
+                body_id_to_color = {
+                    entry.body_id: (
+                        int(entry.color[0] * 255),
+                        int(entry.color[1] * 255),
+                        int(entry.color[2] * 255),
+                    )
+                    for entry in registry.all_entries()
+                }
+                seg_vis = cam_frame.seg_colourmap(body_id_to_color)
+                display = cv2.addWeighted(display, 0.5, seg_vis, 0.5, 0)
 
-            cv2.imshow(window_name, frame)
+            # Primary detector — draw bounding boxes if active
+            if detector and cv_cfg.get("show_detections", True):
+                try:
+                    detections = detector.detect(cam_frame)
+                    display    = detector.draw_detections(display, detections)
+                except Exception as exc:
+                    logger.warning(f"Detector error (skipping frame): {exc}")
+
+            cv2.imshow(window_name, display)
             last_cv_time = now
 
             key = cv2.waitKey(1) & 0xFF
