@@ -59,10 +59,17 @@ class Executor:
         task_id: Optional task_id for tracker
     """
 
-    def __init__(self, robot: MockRobot, tracker=None, task_id: Optional[str] = None):
+    def __init__(
+        self,
+        robot: MockRobot,
+        tracker=None,
+        task_id: Optional[str] = None,
+        timeout_seconds: float = 5.0,
+    ):
         self.robot   = robot
         self.tracker = tracker
         self.task_id = task_id
+        self.timeout_seconds = timeout_seconds
 
     def execute(self, plan: ActionPlan, verbose: bool = True) -> ExecutionResult:
         """
@@ -88,7 +95,18 @@ class Executor:
                 print(f"  Step {cmd.step}: {cmd.command_type.value.upper()} "
                       f"{'«' + cmd.target_object + '»' if cmd.target_object else ''}", end=" ", flush=True)
 
+            step_start = time.perf_counter()
+
             result = self._execute_command(cmd)
+
+            step_elapsed = time.perf_counter() - step_start
+
+            if step_elapsed > self.timeout_seconds:
+                result.success = False
+                result.message = (
+                    f"Execution timeout exceeded "
+                    f"({step_elapsed:.2f}s > {self.timeout_seconds}s)"
+                )
             step_results.append(result)
 
             if verbose:
