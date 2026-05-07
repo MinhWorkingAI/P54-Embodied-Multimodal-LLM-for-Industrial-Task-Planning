@@ -25,13 +25,14 @@ Usage:
     # Suppress output
     python main.py --quiet "locate the yellow block"
 """
-
-import sys
 import os
+import sys
 import argparse
 import logging
 import time
 
+os.environ["PYDANTIC_DISABLE_PLUGINS"] = "1"
+# This is needed to prevent pydantic from trying to load plugins that may not be compatible with our environment.   
 
 # Ensure imports work from project root
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

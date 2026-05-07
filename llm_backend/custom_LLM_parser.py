@@ -144,7 +144,18 @@ def parse_instruction(instruction: str, max_retries: int = 2) -> ParsedInstructi
                 HumanMessage(content=f"Instruction: {instruction}"),
             ]
             response = _get_llm().invoke(messages)
-            result   = output_parser.parse(_clean_json(response.content))
+
+            # Gemini sometimes returns content as a list instead of string
+            raw_content = response.content
+
+            if isinstance(raw_content, list):
+                raw_content = " ".join(
+                    str(item) if not isinstance(item, dict)
+                    else item.get("text", "")
+                    for item in raw_content
+                )
+
+            result = output_parser.parse(_clean_json(raw_content))
             logger.info(f"Parsed successfully on attempt {attempt}: {result}")
 
             # Step 5 -- post-validate
