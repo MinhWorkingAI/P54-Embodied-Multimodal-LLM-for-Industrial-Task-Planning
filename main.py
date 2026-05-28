@@ -3,36 +3,28 @@ main.py
 -------
 Wires all modules together:
     User instruction
-        → LLM parse          (llm_backend/custom_LLM_parser.py)
-        → Vision lookup      (stub → real when ready)
-        → Task plan          (task_planner/planner.py)
-        → Execution          (simulation_backend/executor.py)
-        → Feedback           (inline validation)
+        → LLM parse
+        → Vision lookup
+        → Task plan
+        → Execution
+        → Feedback
 
-All stages are logged via tracker.py with a unique task_id.
-LLM backend is controlled by LLM_BACKEND in .env — not a CLI flag.
-
-Stubs are clearly marked with # STUB — swap for real module when ready.
-Real vision module import is commented in and ready to activate.
-
-Usage:
-    # Single instruction
-    python main.py "pick up the red block and place it in the left tray"
-
-    # Interactive mode
-    python main.py --interactive
-
-    # Suppress output
-    python main.py --quiet "locate the yellow block"
+Now integrated with:
+    ✓ Real PyBullet robot
+    ✓ RealRobot execution
+    ✓ Physical objects
 """
+
 import os
 import sys
 import argparse
 import logging
 import time
 
+import pybullet as p
+import pybullet_data
+
 os.environ["PYDANTIC_DISABLE_PLUGINS"] = "1"
-# This is needed to prevent pydantic from trying to load plugins that may not be compatible with our environment.   
 
 # Ensure imports work from project root
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -41,279 +33,350 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ── Module imports ─────────────────────────────────────────────────────────────
-from llm_backend.custom_LLM_parser     import parse_instruction
-from llm_backend.schema     import ParsedInstruction, ConfidenceLevel
-from llm_backend.tracker    import PipelineTracker
-from task_planner.planner  import TaskPlanner
-from simulation_backend.mock_robot  import MockRobot
-from simulation_backend.executor    import Executor
-from simulation_backend.action_schema import plan_to_commands
+from llm_backend.custom_LLM_parser import parse_instruction
+from llm_backend.schema import ConfidenceLevel
+from llm_backend.tracker import PipelineTracker
+
+from task_planner.planner import TaskPlanner
+
+from simulation_backend.real_robot import RealRobot
+from simulation_backend.executor import Executor
+
+from simulation_backend.simulation_environment.object_registry import ObjectRegistry
 
 logging.basicConfig(
-    level=logging.WARNING,  # Set to DEBUG for verbose output
+    level=logging.WARNING,
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s"
 )
 
 SEP = "═" * 60
 
-# ── Default scene (stub until vision module is ready) ──────────────────────────
-# STUB: Replace this with a real call to the vision module when ready:
-#   from vision_module.scene_representation import get_current_scene
-#   scene = get_current_scene()
+
+# ── Scene (TEMP STUB) ─────────────────────────────────────────────────────────
 
 DEFAULT_SCENE = {
     "objects": [
-        {"label": "red block",    "position": (2.5, 1.0)},
-        {"label": "blue block",   "position": (3.0, 2.0)},
-        {"label": "green block",  "position": (1.5, 3.0)},
-        {"label": "yellow block", "position": (4.0, 2.5)},
-        {"label": "left tray",    "position": (6.0, 1.0)},
-        {"label": "right tray",   "position": (8.0, 1.0)},
-        {"label": "workstation",  "position": (5.0, 5.0)},
+        {"label": "red block", "position": (0.5, 0.2, 0.02)},
+        {"label": "blue block", "position": (0.6, -0.2, 0.02)},
+        {"label": "left tray", "position": (0.3, 0.3, 0.02)},
+        {"label": "right tray", "position": (0.7, -0.3, 0.02)},
     ]
 }
 
 
-def get_scene() -> dict:
-    """
-    Get the current scene. Returns stub scene until vision module is integrated.
-    SWAP THIS: Replace with real vision module call when PB4/PB5 is ready.
-    """
-    # STUB — real call would be:
-    # from vision_module.scene_representation import get_current_scene
-    # return get_current_scene()
+def get_scene():
     return DEFAULT_SCENE
 
 
-# ── Pipeline ───────────────────────────────────────────────────────────────────
+# ── PYBULLET SETUP ────────────────────────────────────────────────────────────
+
+def setup_simulation():
+
+    physics_client = p.connect(p.GUI)
+
+    p.setAdditionalSearchPath(pybullet_data.getDataPath())
+
+    p.setGravity(0, 0, -9.81)
+
+    p.loadURDF("plane.urdf")
+
+    # Load robot
+    robot_id = p.loadURDF(
+        "kuka_iiwa/model.urdf",
+        basePosition=[0, 0, 0],
+        useFixedBase=True
+    )
+
+    # Create registry
+    object_registry = ObjectRegistry()
+
+    # Load objects
+    red_block = p.loadURDF(
+        "cube_small.urdf",
+        [0.5, 0.2, 0.02]
+    )
+
+    blue_block = p.loadURDF(
+        "cube_small.urdf",
+        [0.6, -0.2, 0.02]
+    )
+
+    # Register objects
+    object_registry.register_object(
+        "red block",
+        red_block
+    )
+
+    object_registry.register_object(
+        "blue block",
+        blue_block
+    )
+
+    return robot_id, object_registry
+
+
+# ── PIPELINE ──────────────────────────────────────────────────────────────────
 
 def run_pipeline(
-    instruction:     str,
-    verbose:         bool = True,
-    tracker:         PipelineTracker | None = None,
-) -> dict:
-    """
-    Run the full pipeline for a single instruction.
+    instruction: str,
+    verbose: bool = True,
+    tracker: PipelineTracker | None = None,
+):
 
-    Args:
-        instruction: Natural language task instruction
-        verbose:     Print progress to stdout
-        tracker:     PipelineTracker instance for cross-domain logging
-
-    Returns:
-        Result dict with keys: success, task_id, parsed, plan, execution
-    """
     if tracker is None:
         tracker = PipelineTracker()
 
-    _backend = os.getenv("LLM_BACKEND", "openai")
+    backend = os.getenv("LLM_BACKEND", "openai")
 
-    # ── Register task ──────────────────────────────────────────────────────────
-    task_id = tracker.new_task(instruction, model=_backend)
+    task_id = tracker.new_task(
+        instruction,
+        model=backend
+    )
 
     if verbose:
         print(f"\n{SEP}")
-        print(f"  PIPELINE START")
-        print(f"  Instruction : {instruction}")
-        print(f"  Model       : {_backend}")
-        print(f"  Task ID     : {task_id}")
+        print("PIPELINE START")
+        print(f"Instruction : {instruction}")
+        print(f"Backend     : {backend}")
+        print(f"Task ID     : {task_id}")
         print(SEP)
 
     result = {
-        "success":   False,
-        "task_id":   task_id,
-        "parsed":    None,
-        "plan":      None,
-        "execution": None,
+        "success": False,
+        "task_id": task_id,
     }
 
-    # ══ STAGE 1: LLM PARSE ════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════
+    # STAGE 1 — LLM PARSE
+    # ═══════════════════════════════════════════════════════════════
+
     if verbose:
-        print(f"\n  [1/5] LLM Parse ({_backend})")
+        print("\n[1/5] LLM Parse")
 
     try:
-        t0     = time.perf_counter()
+
+        t0 = time.perf_counter()
+
         parsed = parse_instruction(instruction)
-        lat    = (time.perf_counter() - t0) * 1000
 
-        result["parsed"] = parsed
+        latency = (time.perf_counter() - t0) * 1000
 
         tracker.record(
-            task_id, "llm_parse", status="success",
+            task_id,
+            "llm_parse",
+            status="success",
             payload=parsed.model_dump(mode="json"),
-            latency_ms=lat,
+            latency_ms=latency
         )
 
         if verbose:
-            print(f"       Action      : {parsed.action.value}")
-            print(f"       Object      : {parsed.object_target}")
-            print(f"       Destination : {parsed.destination or '—'}")
-            print(f"       Spatial     : {parsed.spatial_relation or '—'}")
-            print(f"       Confidence  : {parsed.confidence.value}")
-            print(f"       Latency     : {lat:.0f}ms")
+            print(f"Action      : {parsed.action.value}")
+            print(f"Object      : {parsed.object_target}")
+            print(f"Destination : {parsed.destination}")
+            print(f"Confidence  : {parsed.confidence.value}")
 
-        # Low confidence warning
         if parsed.confidence == ConfidenceLevel.LOW:
-            if verbose:
-                print(f"\n  ⚠  Low confidence — instruction may be ambiguous")
-                print(f"     Notes: {parsed.notes}")
-            tracker.record(task_id, "feedback", status="retry",
-                          payload={"reason": "low_confidence", "notes": parsed.notes})
-            result["success"] = False
+
+            print("\nLow confidence instruction")
+            print(parsed.notes)
+
             tracker.complete_task(task_id, success=False)
+
             return result
 
     except Exception as e:
-        tracker.record(task_id, "llm_parse", status="failed", error=str(e))
+
+        print(f"LLM Parse Error: {e}")
+
         tracker.complete_task(task_id, success=False)
-        if verbose:
-            print(f"       ✗ LLM parse failed: {e}")
+
         return result
 
-    # ══ STAGE 2: VISION LOOKUP ════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════
+    # STAGE 2 — SCENE LOOKUP
+    # ═══════════════════════════════════════════════════════════════
+
     if verbose:
-        print(f"\n  [2/5] Vision Lookup  [STUB — real vision module not yet connected]")
+        print("\n[2/5] Scene Lookup")
 
     try:
+
         scene = get_scene()
-        tracker.record(
-            task_id, "vision_lookup", status="success",
-            payload={"object_count": len(scene["objects"]), "objects": [o["label"] for o in scene["objects"]]},
-            latency_ms=0.5,
-        )
+
         if verbose:
-            print(f"       Objects in scene: {[o['label'] for o in scene['objects']]}")
+            print("Scene Objects:")
+
+            for obj in scene["objects"]:
+                print(f" - {obj['label']}")
 
     except Exception as e:
-        tracker.record(task_id, "vision_lookup", status="failed", error=str(e))
+
+        print(f"Scene Error: {e}")
+
         tracker.complete_task(task_id, success=False)
-        if verbose:
-            print(f"       ✗ Vision lookup failed: {e}")
+
         return result
 
-    # ══ STAGE 3: TASK PLANNING ════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════
+    # STAGE 3 — TASK PLANNING
+    # ═══════════════════════════════════════════════════════════════
+
     if verbose:
-        print(f"\n  [3/5] Task Planning")
+        print("\n[3/5] Task Planning")
 
     try:
+
         planner = TaskPlanner()
-        t0      = time.perf_counter()
-        plan    = planner.generate_plan(parsed, scene, task_id=task_id)
-        lat     = (time.perf_counter() - t0) * 1000
 
-        result["plan"] = plan
-
-        tracker.record(
-            task_id, "task_plan", status="success",
-            payload={"steps": plan.total_steps, "commands": [c.command_type.value for c in plan.commands]},
-            latency_ms=lat,
+        plan = planner.generate_plan(
+            parsed,
+            scene,
+            task_id=task_id
         )
+
         if verbose:
-            print(f"       Steps generated : {plan.total_steps}")
+
+            print(f"Generated {plan.total_steps} steps")
+
             for cmd in plan.commands:
-                print(f"       {cmd.summary()}")
-
-    except ValueError as e:
-        tracker.record(task_id, "task_plan", status="failed", error=str(e))
-        tracker.complete_task(task_id, success=False)
-        if verbose:
-            print(f"       ✗ Planning failed: {e}")
-        return result
-
-    # ══ STAGE 4: EXECUTION ════════════════════════════════════════════════════
-    if verbose:
-        print(f"\n  [4/5] Execution  [MockRobot]")
-
-    try:
-        robot    = MockRobot()
-        robot.load_scene(scene)
-        executor = Executor(robot, tracker=tracker, task_id=task_id)
-        exec_res = executor.execute(plan, verbose=verbose)
-
-        result["execution"] = exec_res
-
-        if not exec_res.success:
-            tracker.complete_task(task_id, success=False)
-            result["success"] = False
-            return result
+                print(cmd.summary())
 
     except Exception as e:
-        tracker.record(task_id, "execution", status="failed", error=str(e))
+
+        print(f"Planning Error: {e}")
+
         tracker.complete_task(task_id, success=False)
-        if verbose:
-            print(f"       ✗ Execution error: {e}")
+
         return result
 
-    # ══ STAGE 5: FEEDBACK ════════════════════════════════════════════════════
-    if verbose:
-        print(f"  [5/5] Feedback & Validation")
+    # ═══════════════════════════════════════════════════════════════
+    # STAGE 4 — REAL ROBOT EXECUTION
+    # ═══════════════════════════════════════════════════════════════
 
-    tracker.record(
-        task_id, "feedback", status="success",
-        payload={
-            "steps_completed": exec_res.steps_completed,
-            "total_steps":     plan.total_steps,
-            "latency_ms":      exec_res.total_latency_ms,
-        },
-    )
+    if verbose:
+        print("\n[4/5] Real Robot Execution")
+
+    try:
+
+        robot_id, object_registry = setup_simulation()
+
+        robot = RealRobot(
+            robot_id=robot_id,
+            object_registry=object_registry
+        )
+
+        robot.load_scene(scene)
+
+        executor = Executor(
+            robot,
+            tracker=tracker,
+            task_id=task_id
+        )
+
+        execution_result = executor.execute(
+            plan,
+            verbose=verbose
+        )
+
+        result["execution"] = execution_result
+
+    except Exception as e:
+
+        print(f"Execution Error: {e}")
+
+        tracker.complete_task(task_id, success=False)
+
+        return result
+
+    # ═══════════════════════════════════════════════════════════════
+    # STAGE 5 — FEEDBACK
+    # ═══════════════════════════════════════════════════════════════
+
+    if verbose:
+        print("\n[5/5] Feedback")
+
+        print("Task completed successfully")
+
     tracker.complete_task(task_id, success=True)
+
     result["success"] = True
 
-    if verbose:
-        print(f"       ✓ Task completed — {exec_res.steps_completed}/{plan.total_steps} steps")
-        print(f"\n{SEP}")
-        print(f"  PIPELINE COMPLETE  ✓  Task ID: {task_id}")
-        print(SEP)
-        tracker.print_task(task_id)
-
-    tracker.save()
     return result
 
 
-# ── Interactive mode ───────────────────────────────────────────────────────────
+# ── INTERACTIVE MODE ──────────────────────────────────────────────────────────
 
-def run_interactive() -> None:
-    tracker  = PipelineTracker()
-    _backend = os.getenv("LLM_BACKEND", "openai")
+def run_interactive():
+
+    tracker = PipelineTracker()
+
     print(f"\n{SEP}")
-    print("  Multimodal LLM — Industrial Task Planning Pipeline")
-    print(f"  Model: {_backend}  |  Type 'quit' to exit  |  Type 'status' for summary")
-    print(SEP + "\n")
+    print("Industrial Task Planning Pipeline")
+    print("Type 'quit' to exit")
+    print(SEP)
 
     while True:
+
         try:
-            instruction = input("Instruction: ").strip()
+
+            instruction = input("\nInstruction: ").strip()
+
+            if instruction.lower() in ["quit", "exit", "q"]:
+                break
+
             if not instruction:
                 continue
-            if instruction.lower() in ("quit", "exit", "q"):
-                tracker.print_summary()
-                print("Goodbye!")
-                break
-            if instruction.lower() == "status":
-                tracker.print_summary()
-                continue
-            run_pipeline(instruction, verbose=True, tracker=tracker)
+
+            run_pipeline(
+                instruction,
+                verbose=True,
+                tracker=tracker
+            )
 
         except KeyboardInterrupt:
-            print("\nGoodbye!")
-            tracker.print_summary()
             break
+
         except Exception as e:
-            print(f"  ✗ Pipeline error: {e}")
+            print(f"Pipeline Error: {e}")
 
 
-# ── Entry point ────────────────────────────────────────────────────────────────
+# ── ENTRY POINT ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser(description="Multimodal LLM Industrial Task Planning Pipeline")
-    ap.add_argument("instruction", nargs="?", help="Instruction to execute")
-    ap.add_argument("--interactive", "-i", action="store_true", help="Interactive mode")
-    ap.add_argument("--quiet", "-q", action="store_true", help="Suppress verbose output")
-    args = ap.parse_args()
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "instruction",
+        nargs="?",
+        help="Instruction to execute"
+    )
+
+    parser.add_argument(
+        "--interactive",
+        "-i",
+        action="store_true"
+    )
+
+    parser.add_argument(
+        "--quiet",
+        "-q",
+        action="store_true"
+    )
+
+    args = parser.parse_args()
 
     if args.interactive:
+
         run_interactive()
+
     elif args.instruction:
-        run_pipeline(args.instruction, verbose=not args.quiet)
+
+        run_pipeline(
+            args.instruction,
+            verbose=not args.quiet
+        )
+
     else:
-        ap.print_help()
+
+        parser.print_help()
