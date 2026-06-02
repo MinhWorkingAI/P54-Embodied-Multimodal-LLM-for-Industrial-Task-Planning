@@ -31,13 +31,18 @@ def test_pick_and_place_decomposition():
 
     assert isinstance(output, PlannerOutput)
     action_types = [step.action for step in output.steps]
+    # A full pick-and-place now decomposes into the canonical 9-step pipeline:
+    # Locate → Approach → Lower → Grasp → Lift → Move → Lower → Release → Reset.
     assert action_types == [
+        PrimitiveActionType.LOCATE,
         PrimitiveActionType.APPROACH,
         PrimitiveActionType.LOWER,
         PrimitiveActionType.GRASP,
         PrimitiveActionType.LIFT,
         PrimitiveActionType.MOVE,
+        PrimitiveActionType.LOWER,
         PrimitiveActionType.RELEASE,
+        PrimitiveActionType.RESET,
     ]
 
 

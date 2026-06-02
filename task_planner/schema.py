@@ -21,6 +21,7 @@ class PrimitiveActionType(str, Enum):
     MOVE = "move"
     RELEASE = "release"
     LOCATE = "locate"
+    RESET = "reset"  # return arm to the home/neutral pose at the end of a task
 
 
 class PrimitiveAction(BaseModel):

@@ -12,4 +12,8 @@ import os
 # Add project root to path so all absolute imports work
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-collect_ignore = ["llm_backend/LLM_eval/test_cases.py"]
+collect_ignore = [
+    "llm_backend/LLM_eval/test_cases.py",
+    "tests/test_invalid_action.py",   # scratch script (no test functions), not a pytest module
+    "tests/test_safety_check.py",     # scratch script (no test functions), not a pytest module
+]
