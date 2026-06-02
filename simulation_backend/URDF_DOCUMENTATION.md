@@ -18,7 +18,7 @@ URDF is an XML-based format used by ROS and PyBullet to describe the physical, v
 
 ### Custom-authored URDFs (this project)
 
-The following URDF files were authored specifically for this project by the P54 development team and are original works:
+The following URDF files were authored for this project by the P54 development team :
 
 | File | Author | Date |
 |---|---|---|
@@ -62,9 +62,9 @@ Licence: Apache License 2.0.
 **Usage in pipeline:**
 ```yaml
 # scene_config.yaml
-- label: workstation
-  urdf:  simulation_backend/assets/urdf/workstation.urdf
-  color: [0.35, 0.35, 0.35, 1.0]
+- label: <label_to_display_in_Pybullet>
+  urdf:  simulation_backend/assets/urdf/<filename>.urdf
+  color: [0.35, 0.35, 0.35, 1.0] 
   position: [0.80, 0.00, 0.0]
   mass_kg: 0.0
   graspable: false

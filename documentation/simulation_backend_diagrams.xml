@@ -1,0 +1,552 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- PAGE 1: SEQUENCE DIAGRAM                                        -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+
+    <!-- Title -->
+    <mxCell id="title_seq" value="display_scene.py — Sequence Diagram" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="20" width="600" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- ── Actors ── -->
+    <mxCell id="act_main" value="display_scene.py" style="shape=mxgraph.flowchart.start_2;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="100" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="act_ws" value="Workspace" style="shape=mxgraph.flowchart.start_2;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="210" y="60" width="100" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="act_ol" value="ObjectLoader" style="shape=mxgraph.flowchart.start_2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="360" y="60" width="100" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="act_or" value="ObjectRegistry" style="shape=mxgraph.flowchart.start_2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="510" y="60" width="110" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="act_gt" value="GroundTruth" style="shape=mxgraph.flowchart.start_2;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="670" y="60" width="100" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="act_sb" value="SceneBuilder" style="shape=mxgraph.flowchart.start_2;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="820" y="60" width="100" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="act_pb" value="PyBullet API" style="shape=mxgraph.flowchart.start_2;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="970" y="60" width="100" height="40" as="geometry"/>
+    </mxCell>
+
+    <!-- Lifelines -->
+    <mxCell id="ll_main" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;" edge="1" parent="1">
+      <mxGeometry x="110" y="100" relative="1" as="geometry"><Array as="points"><mxPoint x="110" y="1000"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="ll_ws" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#82b366;" edge="1" parent="1">
+      <mxGeometry x="260" y="100" relative="1" as="geometry"><Array as="points"><mxPoint x="260" y="1000"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="ll_ol" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#6c8ebf;" edge="1" parent="1">
+      <mxGeometry x="410" y="100" relative="1" as="geometry"><Array as="points"><mxPoint x="410" y="1000"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="ll_or" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#6c8ebf;" edge="1" parent="1">
+      <mxGeometry x="565" y="100" relative="1" as="geometry"><Array as="points"><mxPoint x="565" y="1000"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="ll_gt" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#d6b656;" edge="1" parent="1">
+      <mxGeometry x="720" y="100" relative="1" as="geometry"><Array as="points"><mxPoint x="720" y="1000"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="ll_sb" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#b85450;" edge="1" parent="1">
+      <mxGeometry x="870" y="100" relative="1" as="geometry"><Array as="points"><mxPoint x="870" y="1000"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="ll_pb" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#9673a6;" edge="1" parent="1">
+      <mxGeometry x="1020" y="100" relative="1" as="geometry"><Array as="points"><mxPoint x="1020" y="1000"/></Array></mxGeometry>
+    </mxCell>
+
+    <!-- ── PHASE 1: STARTUP ── -->
+    <mxCell id="phase_startup" value="STARTUP" style="swimlane;startSize=20;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="110" width="1020" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- 1. load config -->
+    <mxCell id="s1" value="yaml.safe_load(scene_config.yaml, encoding=utf-8)" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=block;endFill=1;strokeColor=#666666;fontSize=10;" edge="1" parent="1" source="act_main" target="act_main">
+      <mxGeometry x="110" y="145" relative="1" as="geometry"><mxPoint x="110" y="145" as="sourcePoint"/><mxPoint x="180" y="145" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="s1_lbl" value="1. load_config()" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="115" y="135" width="240" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- 2. p.connect(GUI) -->
+    <mxCell id="s2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry x="110" y="170" relative="1" as="geometry"><mxPoint x="110" y="170" as="sourcePoint"/><mxPoint x="1020" y="170" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="s2_lbl" value="2. p.connect(p.GUI)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="500" y="155" width="160" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2r" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry x="1020" y="185" relative="1" as="geometry"><mxPoint x="1020" y="185" as="sourcePoint"/><mxPoint x="110" y="185" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="s2r_lbl" value="→ physics_client (int)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="500" y="185" width="160" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- 3. Workspace.build() -->
+    <mxCell id="s3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#82b366;" edge="1" parent="1">
+      <mxGeometry x="110" y="215" relative="1" as="geometry"><mxPoint x="110" y="215" as="sourcePoint"/><mxPoint x="260" y="215" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="s3_lbl" value="3. Workspace.build()" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="130" y="200" width="140" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3a" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1">
+      <mxGeometry x="260" y="230" relative="1" as="geometry"><mxPoint x="260" y="230" as="sourcePoint"/><mxPoint x="1020" y="230" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="s3a_lbl" value="loadURDF(plane.urdf), createMultiBody × 5 (table + 4 walls)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="500" y="215" width="300" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3r" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#82b366;" edge="1" parent="1">
+      <mxGeometry x="260" y="248" relative="1" as="geometry"><mxPoint x="260" y="248" as="sourcePoint"/><mxPoint x="110" y="248" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="s3r_lbl" value="→ body_ids[ ] workspace built" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="130" y="248" width="180" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- 4. ObjectLoader.load_all() -->
+    <mxCell id="s4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#6c8ebf;" edge="1" parent="1">
+      <mxGeometry x="110" y="278" relative="1" as="geometry"><mxPoint x="110" y="278" as="sourcePoint"/><mxPoint x="410" y="278" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="s4_lbl" value="4. ObjectLoader.load_all()" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="200" y="263" width="180" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="s4a" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1">
+      <mxGeometry x="410" y="293" relative="1" as="geometry"><mxPoint x="410" y="293" as="sourcePoint"/><mxPoint x="1020" y="293" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="s4a_lbl" value="loadURDF(block.urdf) × 4, tray.urdf × 2, workstation.urdf × 1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="500" y="278" width="340" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="s4b" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1">
+      <mxGeometry x="410" y="308" relative="1" as="geometry"><mxPoint x="410" y="308" as="sourcePoint"/><mxPoint x="1020" y="308" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="s4b_lbl" value="changeVisualShape(body_id, rgbaColor) × 7" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="500" y="308" width="280" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="s4c" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#6c8ebf;" edge="1" parent="1">
+      <mxGeometry x="410" y="323" relative="1" as="geometry"><mxPoint x="410" y="323" as="sourcePoint"/><mxPoint x="565" y="323" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="s4c_lbl" value="register(body_id, label, color, …) × 7" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="410" y="308" width="200" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="s4r" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#6c8ebf;" edge="1" parent="1">
+      <mxGeometry x="410" y="340" relative="1" as="geometry"><mxPoint x="410" y="340" as="sourcePoint"/><mxPoint x="110" y="340" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="s4r_lbl" value="→ [body_ids] 7 objects loaded" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="200" y="340" width="200" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- 5. addUserDebugText labels -->
+    <mxCell id="s5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1">
+      <mxGeometry x="110" y="370" relative="1" as="geometry"><mxPoint x="110" y="370" as="sourcePoint"/><mxPoint x="1020" y="370" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="s5_lbl" value="5. addUserDebugText(label, pos + offset_z) × 7" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="400" y="355" width="300" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- 6. Init GroundTruth + SceneBuilder -->
+    <mxCell id="s6a" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#d6b656;" edge="1" parent="1">
+      <mxGeometry x="110" y="395" relative="1" as="geometry"><mxPoint x="110" y="395" as="sourcePoint"/><mxPoint x="720" y="395" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="s6a_lbl" value="6. GroundTruth(client, registry)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="380" y="380" width="220" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="s6b" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#b85450;" edge="1" parent="1">
+      <mxGeometry x="110" y="415" relative="1" as="geometry"><mxPoint x="110" y="415" as="sourcePoint"/><mxPoint x="870" y="415" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="s6b_lbl" value="7. SceneBuilder(registry)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="450" y="415" width="200" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- 8. cv2.namedWindow -->
+    <mxCell id="s7_lbl" value="8. cv2.namedWindow('Simulation Camera Feed')" style="text;html=1;strokeColor=none;fillColor=#f5f5f5;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="60" y="435" width="340" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- ── PHASE 2: MAIN LOOP ── -->
+    <mxCell id="phase_loop" value="MAIN LOOP — per frame (while _running)" style="swimlane;startSize=20;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#333333;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="465" width="1020" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- stepSimulation -->
+    <mxCell id="l1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1">
+      <mxGeometry x="110" y="500" relative="1" as="geometry"><mxPoint x="110" y="500" as="sourcePoint"/><mxPoint x="1020" y="500" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l1_lbl" value="9. p.stepSimulation()" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="490" y="485" width="160" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- getCameraImage -->
+    <mxCell id="l2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1">
+      <mxGeometry x="110" y="520" relative="1" as="geometry"><mxPoint x="110" y="520" as="sourcePoint"/><mxPoint x="1020" y="520" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l2_lbl" value="10. getCameraImage(w, h, viewMatrix, projMatrix)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="450" y="505" width="290" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="l2r" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;" edge="1" parent="1">
+      <mxGeometry x="1020" y="535" relative="1" as="geometry"><mxPoint x="1020" y="535" as="sourcePoint"/><mxPoint x="110" y="535" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l2r_lbl" value="→ (rgba[h,w,4], depth[h,w], seg_mask[h,w])" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="450" y="535" width="290" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- reshape + cvtColor + imshow -->
+    <mxCell id="l3_lbl" value="11. np.reshape(rgba) → cvtColor(RGB→BGR) → cv2.imshow() → cv2.waitKey(1)" style="text;html=1;strokeColor=none;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="555" width="520" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- q check -->
+    <mxCell id="l4_lbl" value="12. if key == 'q' → _running = False → exit loop" style="text;html=1;strokeColor=none;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="580" width="400" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- robot state overlay -->
+    <mxCell id="l5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1">
+      <mxGeometry x="110" y="610" relative="1" as="geometry"><mxPoint x="110" y="610" as="sourcePoint"/><mxPoint x="1020" y="610" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l5_lbl" value="13. removeUserDebugItem(old_id) + addUserDebugText(state_text)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="400" y="595" width="360" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- terminal rate check -->
+    <mxCell id="l6_lbl" value="14. if (now − last_term_time) ≥ 1 / terminal.update_rate_hz:" style="text;html=1;strokeColor=none;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="630" width="440" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- gt.get_all() -->
+    <mxCell id="l7" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#d6b656;" edge="1" parent="1">
+      <mxGeometry x="110" y="660" relative="1" as="geometry"><mxPoint x="110" y="660" as="sourcePoint"/><mxPoint x="720" y="660" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l7_lbl" value="15. get_all()" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="370" y="645" width="100" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="l7a" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1">
+      <mxGeometry x="720" y="675" relative="1" as="geometry"><mxPoint x="720" y="675" as="sourcePoint"/><mxPoint x="1020" y="675" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l7a_lbl" value="getBasePositionAndOrientation(body_id) × 7" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="750" y="660" width="260" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="l7b" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;" edge="1" parent="1">
+      <mxGeometry x="1020" y="690" relative="1" as="geometry"><mxPoint x="1020" y="690" as="sourcePoint"/><mxPoint x="720" y="690" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l7b_lbl" value="→ (pos, orient) × 7" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="820" y="690" width="160" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="l7r" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#d6b656;" edge="1" parent="1">
+      <mxGeometry x="720" y="708" relative="1" as="geometry"><mxPoint x="720" y="708" as="sourcePoint"/><mxPoint x="110" y="708" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l7r_lbl" value="→ list[Detection] confidence=1.0 source='ground_truth'" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="300" y="708" width="320" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- sb.build() -->
+    <mxCell id="l8" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#b85450;" edge="1" parent="1">
+      <mxGeometry x="110" y="738" relative="1" as="geometry"><mxPoint x="110" y="738" as="sourcePoint"/><mxPoint x="870" y="738" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l8_lbl" value="16. build(detector_results=[], ground_truth_results=gt)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="420" y="723" width="300" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="l8a_lbl" value="  _resolve_detection() × 7 → _compute_spatial_relationships() → update_position() × 7" style="text;html=1;strokeColor=none;fillColor=#f5f5f5;strokeColor=#b85450;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="700" y="753" width="380" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="l8r" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#b85450;" edge="1" parent="1">
+      <mxGeometry x="870" y="778" relative="1" as="geometry"><mxPoint x="870" y="778" as="sourcePoint"/><mxPoint x="110" y="778" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l8r_lbl" value="→ rich scene dict {scene_timestamp, detected_objects[ ]}" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="380" y="778" width="320" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- print + sleep -->
+    <mxCell id="l9_lbl" value="17. _print_scene(scene) → terminal output" style="text;html=1;strokeColor=none;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="803" width="340" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="l10_lbl" value="18. time.sleep(1/240) → next frame" style="text;html=1;strokeColor=none;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="828" width="300" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- ── PHASE 3: CLEANUP ── -->
+    <mxCell id="phase_cleanup" value="CLEANUP (q pressed or Ctrl+C)" style="swimlane;startSize=20;fillColor=#f8cecc;strokeColor=#b85450;fontColor=#333333;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="858" width="1020" height="20" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="c1_lbl" value="19. cv2.destroyAllWindows()" style="text;html=1;strokeColor=none;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="888" width="280" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="c2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1">
+      <mxGeometry x="110" y="913" relative="1" as="geometry"><mxPoint x="110" y="913" as="sourcePoint"/><mxPoint x="1020" y="913" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="c2_lbl" value="20. removeUserDebugItem(label_id) × 7" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="490" y="898" width="260" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1">
+      <mxGeometry x="110" y="933" relative="1" as="geometry"><mxPoint x="110" y="933" as="sourcePoint"/><mxPoint x="1020" y="933" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="c3_lbl" value="21. p.disconnect(physicsClientId)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="490" y="933" width="260" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- PAGE 2: UML CLASS DIAGRAM                                       -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+
+    <!-- Title -->
+    <mxCell id="title_uml" value="simulation_backend — UML Class Diagram" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1800" y="20" width="600" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- ── ObjectEntry ── -->
+    <mxCell id="oe_title" value="«dataclass» ObjectEntry" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1700" y="60" width="240" height="178" as="geometry"/>
+    </mxCell>
+    <mxCell id="oe_attrs" value="+ body_id: int&#xa;+ label: str&#xa;+ color: list[float]  [R,G,B,A ∈ 0..1]&#xa;+ position: tuple[float,float,float]  [x,y,z metres]&#xa;+ graspable: bool&#xa;+ mass_kg: float  (0.0 = static)&#xa;+ attributes: dict" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="oe_title">
+      <mxGeometry y="26" width="240" height="152" as="geometry"/>
+    </mxCell>
+
+    <!-- ── ObjectRegistry ── -->
+    <mxCell id="or_title" value="ObjectRegistry" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1700" y="280" width="240" height="242" as="geometry"/>
+    </mxCell>
+    <mxCell id="or_attrs" value="- _by_id: dict[int, ObjectEntry]&#xa;- _by_label: dict[str, ObjectEntry]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="or_title">
+      <mxGeometry y="26" width="240" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="or_divider" value="" style="line;strokeColor=#6c8ebf;fillColor=none;" vertex="1" parent="or_title">
+      <mxGeometry y="72" width="240" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="or_methods" value="+ register(body_id, label, color, position,&#xa;    graspable, mass_kg, attributes) → ObjectEntry&#xa;+ get_by_id(int) → ObjectEntry | None&#xa;+ get_by_label(str) → ObjectEntry | None&#xa;+ all_ids() → list[int]&#xa;+ all_entries() → list[ObjectEntry]&#xa;+ graspable_entries() → list[ObjectEntry]&#xa;+ update_position(int, tuple)&#xa;+ clear()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="or_title">
+      <mxGeometry y="82" width="240" height="160" as="geometry"/>
+    </mxCell>
+
+    <!-- ObjectRegistry 1 → * ObjectEntry (composition) -->
+    <mxCell id="rel_or_oe" value="stores" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;startArrow=ERmany;startFill=0;strokeColor=#6c8ebf;fontSize=10;" edge="1" parent="1" source="or_title" target="oe_title">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ── Workspace ── -->
+    <mxCell id="ws_title" value="Workspace" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1700" y="580" width="240" height="202" as="geometry"/>
+    </mxCell>
+    <mxCell id="ws_attrs" value="- _client: int&#xa;- _cfg: dict  (workspace section of YAML)&#xa;- _body_ids: list[int]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="ws_title">
+      <mxGeometry y="26" width="240" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="ws_divider" value="" style="line;strokeColor=#82b366;fillColor=none;" vertex="1" parent="ws_title">
+      <mxGeometry y="82" width="240" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="ws_methods" value="+ build()  [floor → table → walls]&#xa;+ get_body_ids() → list[int]&#xa;+ reset()  [no-op, static bodies]&#xa;- _load_floor()&#xa;- _load_table()  [URDF or primitive]&#xa;- _load_walls()  [4 box bodies]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="ws_title">
+      <mxGeometry y="92" width="240" height="110" as="geometry"/>
+    </mxCell>
+
+    <!-- ── ObjectLoader ── -->
+    <mxCell id="ol_title" value="ObjectLoader" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1700" y="840" width="240" height="176" as="geometry"/>
+    </mxCell>
+    <mxCell id="ol_attrs" value="- _client: int&#xa;- _config: list[dict]  (objects list from YAML)&#xa;- _registry: ObjectRegistry" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="ol_title">
+      <mxGeometry y="26" width="240" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="ol_divider" value="" style="line;strokeColor=#82b366;fillColor=none;" vertex="1" parent="ol_title">
+      <mxGeometry y="82" width="240" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="ol_methods" value="+ load_all() → list[int]&#xa;+ reset_positions()&#xa;- _load_one(cfg: dict) → int | None&#xa;  [loadURDF + changeVisualShape + register]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="ol_title">
+      <mxGeometry y="92" width="240" height="84" as="geometry"/>
+    </mxCell>
+
+    <!-- ObjectLoader depends on ObjectRegistry -->
+    <mxCell id="rel_ol_or" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#82b366;fontSize=10;" edge="1" parent="1" source="ol_title" target="or_title">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ── Detection ── -->
+    <mxCell id="det_title" value="«dataclass» Detection" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="2000" y="60" width="260" height="202" as="geometry"/>
+    </mxCell>
+    <mxCell id="det_attrs" value="+ body_id: int&#xa;+ label: str&#xa;+ position_3d: tuple[float,float,float]&#xa;+ bounding_box_2d: dict | None&#xa;  {x_min, y_min, x_max, y_max} pixels&#xa;+ confidence: float = 1.0  [0.0..1.0]&#xa;+ source: str = 'detector'&#xa;  ∈ {detector, segmentation, ground_truth}" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="det_title">
+      <mxGeometry y="26" width="260" height="176" as="geometry"/>
+    </mxCell>
+
+    <!-- ── SceneBuilder ── -->
+    <mxCell id="sb_title" value="SceneBuilder" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="2000" y="320" width="260" height="246" as="geometry"/>
+    </mxCell>
+    <mxCell id="sb_attrs" value="- _registry: ObjectRegistry&#xa;- _ON_TOP_OF_Z_THRESHOLD: 0.03 m&#xa;- _ON_TOP_OF_XY_THRESHOLD: 0.08 m&#xa;- _NEAR_TO_THRESHOLD: 0.20 m" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="sb_title">
+      <mxGeometry y="26" width="260" height="72" as="geometry"/>
+    </mxCell>
+    <mxCell id="sb_divider" value="" style="line;strokeColor=#b85450;fillColor=none;" vertex="1" parent="sb_title">
+      <mxGeometry y="98" width="260" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="sb_methods" value="+ build(det, seg, gt) → dict&#xa;  [rich scene dict matching scene_abstraction.json]&#xa;+ to_planner_format(dict) → dict&#xa;  [{'objects':[{'label':str,'position':(x,y)}]}]&#xa;- _resolve_detection(body_id, det, seg, gt)&#xa;  [priority: detector → segmentation → gt]&#xa;- _compute_spatial_relationships(objects)&#xa;  [on_top_of, near_to]&#xa;- _find_config_id(label: str) → str" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="sb_title">
+      <mxGeometry y="108" width="260" height="138" as="geometry"/>
+    </mxCell>
+
+    <!-- SceneBuilder uses Detection -->
+    <mxCell id="rel_sb_det" value="produces / consumes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#b85450;fontSize=10;" edge="1" parent="1" source="sb_title" target="det_title">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- SceneBuilder uses ObjectRegistry -->
+    <mxCell id="rel_sb_or" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#b85450;fontSize=10;" edge="1" parent="1" source="sb_title" target="or_title">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ── GroundTruth ── -->
+    <mxCell id="gt_title" value="GroundTruth" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="2000" y="620" width="260" height="176" as="geometry"/>
+    </mxCell>
+    <mxCell id="gt_attrs" value="- _client: int&#xa;- _registry: ObjectRegistry" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="gt_title">
+      <mxGeometry y="26" width="260" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="gt_divider" value="" style="line;strokeColor=#d6b656;fillColor=none;" vertex="1" parent="gt_title">
+      <mxGeometry y="72" width="260" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="gt_methods" value="+ get_all() → list[Detection]&#xa;  [confidence=1.0, source='ground_truth']&#xa;+ get_by_label(str) → Detection | None&#xa;  [calls getBasePositionAndOrientation]&#xa;  [bounding_box_2d always None]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="gt_title">
+      <mxGeometry y="82" width="260" height="94" as="geometry"/>
+    </mxCell>
+
+    <!-- GroundTruth returns Detection -->
+    <mxCell id="rel_gt_det" value="returns" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#d6b656;fontSize=10;" edge="1" parent="1" source="gt_title" target="det_title">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- GroundTruth uses ObjectRegistry -->
+    <mxCell id="rel_gt_or" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#d6b656;fontSize=10;" edge="1" parent="1" source="gt_title" target="or_title">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ── RobotBase (abstract) ── -->
+    <mxCell id="rb_title" value="«abstract» RobotBase" style="swimlane;fontStyle=3;align=center;startSize=26;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="2320" y="60" width="260" height="260" as="geometry"/>
+    </mxCell>
+    <mxCell id="rb_attrs" value="# _client: int&#xa;# _registry: ObjectRegistry&#xa;# _gripper: GripperBase&#xa;# _robot_id: int&#xa;# _ee_link: int  (end effector link index)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="rb_title">
+      <mxGeometry y="26" width="260" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="rb_divider" value="" style="line;strokeColor=#9673a6;fillColor=none;" vertex="1" parent="rb_title">
+      <mxGeometry y="116" width="260" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="rb_methods" value="+ load_scene(dict)&#xa;+ move_to(x,y,z) → bool  [IK + joints]&#xa;+ move_to_object(str) → bool&#xa;+ pick(str) → bool  [IK + constraint]&#xa;+ place(str) → bool  [release constraint]&#xa;+ locate(str) → tuple[float,float,float]&#xa;+ get_position() → tuple&#xa;+ get_held_object() → str | None&#xa;+ reset()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="rb_title">
+      <mxGeometry y="126" width="260" height="134" as="geometry"/>
+    </mxCell>
+
+    <!-- ── GripperBase (abstract) ── -->
+    <mxCell id="gb_title" value="«abstract» GripperBase" style="swimlane;fontStyle=3;align=center;startSize=26;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="2320" y="380" width="260" height="202" as="geometry"/>
+    </mxCell>
+    <mxCell id="gb_attrs" value="# _client: int&#xa;# _robot_id: int&#xa;# _ee_link: int&#xa;# _constraint_id: int | None" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="gb_title">
+      <mxGeometry y="26" width="260" height="72" as="geometry"/>
+    </mxCell>
+    <mxCell id="gb_divider" value="" style="line;strokeColor=#9673a6;fillColor=none;" vertex="1" parent="gb_title">
+      <mxGeometry y="98" width="260" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="gb_methods" value="+ open() → bool&#xa;+ close() → bool&#xa;+ create_constraint(body_id: int) → int&#xa;  [p.createConstraint — grasping]&#xa;+ release_constraint()&#xa;  [p.removeConstraint]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="gb_title">
+      <mxGeometry y="108" width="260" height="94" as="geometry"/>
+    </mxCell>
+
+    <!-- RobotBase composes GripperBase -->
+    <mxCell id="rel_rb_gb" value="1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;startArrow=ERmandOne;startFill=1;strokeColor=#9673a6;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="rb_title" target="gb_title">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ── KukaRobot ── -->
+    <mxCell id="kr_title" value="KukaRobot" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="2320" y="660" width="260" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="kr_attrs" value="+ URDF = 'kuka_iiwa/model.urdf'&#xa;+ NUM_JOINTS = 7&#xa;+ GRIPPER = Robotiq85" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="kr_title">
+      <mxGeometry y="26" width="260" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="kr_divider" value="" style="line;strokeColor=#666666;fillColor=none;" vertex="1" parent="kr_title">
+      <mxGeometry y="82" width="260" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="kr_methods" value="[inherits all methods from RobotBase]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;fontStyle=2;" vertex="1" parent="kr_title">
+      <mxGeometry y="92" width="260" height="18" as="geometry"/>
+    </mxCell>
+
+    <!-- ── FrankaRobot ── -->
+    <mxCell id="fr_title" value="FrankaRobot" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="2320" y="820" width="260" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="fr_attrs" value="+ URDF = 'franka_panda/panda.urdf'&#xa;+ NUM_JOINTS = 7&#xa;+ GRIPPER = FrankaHand" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="fr_title">
+      <mxGeometry y="26" width="260" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="fr_divider" value="" style="line;strokeColor=#666666;fillColor=none;" vertex="1" parent="fr_title">
+      <mxGeometry y="82" width="260" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="fr_methods" value="[inherits all methods from RobotBase]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;fontStyle=2;" vertex="1" parent="fr_title">
+      <mxGeometry y="92" width="260" height="18" as="geometry"/>
+    </mxCell>
+
+    <!-- ── UR5Robot ── -->
+    <mxCell id="ur_title" value="UR5Robot" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="2320" y="980" width="260" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="ur_attrs" value="+ URDF = 'ur5/ur5.urdf'&#xa;+ NUM_JOINTS = 6&#xa;+ GRIPPER = Robotiq85" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="ur_title">
+      <mxGeometry y="26" width="260" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="ur_divider" value="" style="line;strokeColor=#666666;fillColor=none;" vertex="1" parent="ur_title">
+      <mxGeometry y="82" width="260" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="ur_methods" value="[inherits all methods from RobotBase]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;fontStyle=2;" vertex="1" parent="ur_title">
+      <mxGeometry y="92" width="260" height="18" as="geometry"/>
+    </mxCell>
+
+    <!-- Inheritance arrows — concrete robots → RobotBase -->
+    <mxCell id="rel_kr_rb" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;endSize=12;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1" source="kr_title" target="rb_title">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="rel_fr_rb" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;endSize=12;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1" source="fr_title" target="rb_title">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="rel_ur_rb" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;endSize=12;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1" source="ur_title" target="rb_title">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- RobotBase uses ObjectRegistry -->
+    <mxCell id="rel_rb_or" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1" source="rb_title" target="or_title">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ── robots/__init__ factory ── -->
+    <mxCell id="rf_title" value="robots/__init__  (factory)" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="2640" y="60" width="260" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="rf_attrs" value="SUPPORTED_ROBOTS = {&#xa;  'kuka': KukaRobot,&#xa;  'franka': FrankaRobot,&#xa;  'ur5': UR5Robot&#xa;}" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="rf_title">
+      <mxGeometry y="26" width="260" height="76" as="geometry"/>
+    </mxCell>
+    <mxCell id="rf_divider" value="" style="line;strokeColor=#9673a6;fillColor=none;" vertex="1" parent="rf_title">
+      <mxGeometry y="102" width="260" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="rf_methods" value="+ get_robot() → RobotBase&#xa;  [reads SIMULATION_ROBOT from .env]&#xa;+ get_robot_by_name(str) → RobotBase" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;fontSize=11;fontFamily=monospace;" vertex="1" parent="rf_title">
+      <mxGeometry y="112" width="260" height="48" as="geometry"/>
+    </mxCell>
+
+    <!-- Factory creates RobotBase -->
+    <mxCell id="rel_rf_rb" value="creates" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1" source="rf_title" target="rb_title">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Legend -->
+    <mxCell id="leg_title" value="Legend" style="swimlane;fontStyle=1;align=center;startSize=20;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1700" y="1100" width="520" height="130" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg_inh" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;endSize=12;strokeColor=#9673a6;" edge="1" parent="leg_title">
+      <mxGeometry x="20" y="40" relative="1" as="geometry"><mxPoint x="20" y="50" as="sourcePoint"/><mxPoint x="80" y="50" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="leg_inh_lbl" value="Inheritance (extends)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;" vertex="1" parent="leg_title">
+      <mxGeometry x="90" y="40" width="160" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg_dep" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;" edge="1" parent="leg_title">
+      <mxGeometry x="20" y="70" relative="1" as="geometry"><mxPoint x="20" y="80" as="sourcePoint"/><mxPoint x="80" y="80" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="leg_dep_lbl" value="Dependency / uses" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;" vertex="1" parent="leg_title">
+      <mxGeometry x="90" y="70" width="160" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg_comp" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;startArrow=ERmany;startFill=0;strokeColor=#666666;" edge="1" parent="leg_title">
+      <mxGeometry x="20" y="100" relative="1" as="geometry"><mxPoint x="20" y="110" as="sourcePoint"/><mxPoint x="80" y="110" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="leg_comp_lbl" value="Stores / composition" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;" vertex="1" parent="leg_title">
+      <mxGeometry x="90" y="100" width="160" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg_vis" value="+ public   # protected   - private   «abstract» not directly instantiable   «dataclass» auto-generated __init__" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontStyle=2;" vertex="1" parent="leg_title">
+      <mxGeometry x="280" y="40" width="230" height="90" as="geometry"/>
+    </mxCell>
+
+  </root>
+</mxGraphModel>
