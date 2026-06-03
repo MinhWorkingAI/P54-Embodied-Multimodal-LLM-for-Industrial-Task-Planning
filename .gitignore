@@ -215,5 +215,5 @@ capstone/
 *.DS_Store
 
 
-
+#The detection models are large and are not necessary to include in version control. They can be downloaded separately.
 simulation_backend/vision/detection_models
