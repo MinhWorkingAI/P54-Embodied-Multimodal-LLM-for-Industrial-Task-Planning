@@ -377,7 +377,7 @@ class TestFullPipelineIntegration:
 class TestBaselineParser:
 
     def test_simple_pick_parsed(self):
-        from baseline_parser import BaselineParser
+        from llm_backend.LLM_eval.baseline_parser import BaselineParser
         p = BaselineParser()
         r = p.parse("pick up the red block")
         assert r.action == "pick"
@@ -385,21 +385,21 @@ class TestBaselineParser:
         assert r.parse_success is True
 
     def test_simple_place_parsed(self):
-        from baseline_parser import BaselineParser
+        from llm_backend.LLM_eval.baseline_parser import BaselineParser
         p = BaselineParser()
         r = p.parse("place the blue cube in the left tray")
         assert r.action == "place"
         assert r.destination == "left tray"
 
     def test_synonym_not_handled(self):
-        from baseline_parser import BaselineParser
+        from llm_backend.LLM_eval.baseline_parser import BaselineParser
         p = BaselineParser()
         r = p.parse("grab the red block")
         # grab IS in keyword list so baseline should handle this
         assert r.action == "pick"
 
     def test_spatial_not_resolved(self):
-        from baseline_parser import BaselineParser
+        from llm_backend.LLM_eval.baseline_parser import BaselineParser
         p = BaselineParser()
         r = p.parse("place the red block to the left of the blue block")
         # Baseline can extract spatial keyword but can't compute position
@@ -408,20 +408,20 @@ class TestBaselineParser:
         assert r.destination is None or "blue" not in (r.destination or "")
 
     def test_empty_instruction_fails_gracefully(self):
-        from baseline_parser import BaselineParser
+        from llm_backend.LLM_eval.baseline_parser import BaselineParser
         p = BaselineParser()
         r = p.parse("")
         assert r.parse_success is False
         assert r.confidence == "low"
 
     def test_latency_is_sub_millisecond(self):
-        from baseline_parser import BaselineParser
+        from llm_backend.LLM_eval.baseline_parser import BaselineParser
         p = BaselineParser()
         r = p.parse("pick up the red block")
         assert r.latency_ms < 10.0  # should be microseconds, well under 10ms
 
     def test_baseline_evaluation_runs(self):
-        from baseline_parser import run_baseline_evaluation
+        from llm_backend.LLM_eval.baseline_parser import run_baseline_evaluation
         results = run_baseline_evaluation(verbose=False)
         assert len(results) == 25  # all test cases
         assert all("model" in r for r in results)
@@ -429,7 +429,7 @@ class TestBaselineParser:
 
     def test_baseline_accuracy_lower_than_expected_for_spatial(self):
         """Baseline should score lower on spatial than LLM (no position resolution)."""
-        from baseline_parser import run_baseline_evaluation
+        from llm_backend.LLM_eval.baseline_parser import run_baseline_evaluation
         results  = run_baseline_evaluation(verbose=False)
         spatial  = [r for r in results if r["category"] == "spatial"]
         simple   = [r for r in results if r["category"] == "simple"]
