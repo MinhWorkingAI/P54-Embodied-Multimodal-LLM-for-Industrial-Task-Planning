@@ -46,6 +46,7 @@ from vision_backend.scene_representation import get_current_scene
 from simulation_backend.mock_robot  import MockRobot
 from simulation_backend.executor    import Executor
 from simulation_backend.action_schema import plan_to_commands
+from vision_backend.scene_representation import get_planner_scene
 
 logging.basicConfig(
     level=logging.WARNING,  # Set to DEBUG for verbose output
@@ -54,6 +55,29 @@ logging.basicConfig(
 
 SEP = "═" * 60
 
+<<<<<<< HEAD
+=======
+# ── Default scene (stub until vision module is ready) ──────────────────────────
+# STUB: Replace this with a real call to the vision module when ready:
+#   from vision_module.scene_representation import get_current_scene
+#   scene = get_current_scene()
+
+DEFAULT_SCENE = {
+    "objects": [
+        {"label": "red block",    "position": (2.5, 1.0)},
+        {"label": "blue block",   "position": (3.0, 2.0)},
+        {"label": "green block",  "position": (1.5, 3.0)},
+        {"label": "yellow block", "position": (4.0, 2.5)},
+        {"label": "left tray",    "position": (6.0, 1.0)},
+        {"label": "right tray",   "position": (8.0, 1.0)},
+        {"label": "workstation",  "position": (5.0, 5.0)},
+    ]
+}
+
+def get_scene() -> dict:
+    return get_planner_scene("scene_representation.json")
+
+>>>>>>> 1c4e116 (init commit for everything and main uodate based on lakshit's work)
 
 # ── Pipeline ───────────────────────────────────────────────────────────────────
 
