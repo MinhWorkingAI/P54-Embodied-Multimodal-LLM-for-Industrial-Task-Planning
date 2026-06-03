@@ -4,16 +4,13 @@ main.py
 Wires all modules together:
     User instruction
         → LLM parse          (llm_backend/custom_LLM_parser.py)
-        → Vision lookup      (stub → real when ready)
+        → Vision lookup      (vision_backend/scene_representation.py)
         → Task plan          (task_planner/planner.py)
         → Execution          (simulation_backend/executor.py)
         → Feedback           (inline validation)
 
 All stages are logged via tracker.py with a unique task_id.
 LLM backend is controlled by LLM_BACKEND in .env — not a CLI flag.
-
-Stubs are clearly marked with # STUB — swap for real module when ready.
-Real vision module import is commented in and ready to activate.
 
 Usage:
     # Single instruction
@@ -25,13 +22,14 @@ Usage:
     # Suppress output
     python main.py --quiet "locate the yellow block"
 """
-
-import sys
 import os
+import sys
 import argparse
 import logging
 import time
 
+os.environ["PYDANTIC_DISABLE_PLUGINS"] = "1"
+# This is needed to prevent pydantic from trying to load plugins that may not be compatible with our environment.   
 
 # Ensure imports work from project root
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -44,6 +42,7 @@ from llm_backend.custom_LLM_parser     import parse_instruction
 from llm_backend.schema     import ParsedInstruction, ConfidenceLevel
 from llm_backend.tracker    import PipelineTracker
 from task_planner.planner  import TaskPlanner
+from vision_backend.scene_representation import get_current_scene
 from simulation_backend.mock_robot  import MockRobot
 from simulation_backend.executor    import Executor
 from simulation_backend.action_schema import plan_to_commands
@@ -54,34 +53,6 @@ logging.basicConfig(
 )
 
 SEP = "═" * 60
-
-# ── Default scene (stub until vision module is ready) ──────────────────────────
-# STUB: Replace this with a real call to the vision module when ready:
-#   from vision_module.scene_representation import get_current_scene
-#   scene = get_current_scene()
-
-DEFAULT_SCENE = {
-    "objects": [
-        {"label": "red block",    "position": (2.5, 1.0)},
-        {"label": "blue block",   "position": (3.0, 2.0)},
-        {"label": "green block",  "position": (1.5, 3.0)},
-        {"label": "yellow block", "position": (4.0, 2.5)},
-        {"label": "left tray",    "position": (6.0, 1.0)},
-        {"label": "right tray",   "position": (8.0, 1.0)},
-        {"label": "workstation",  "position": (5.0, 5.0)},
-    ]
-}
-
-
-def get_scene() -> dict:
-    """
-    Get the current scene. Returns stub scene until vision module is integrated.
-    SWAP THIS: Replace with real vision module call when PB4/PB5 is ready.
-    """
-    # STUB — real call would be:
-    # from vision_module.scene_representation import get_current_scene
-    # return get_current_scene()
-    return DEFAULT_SCENE
 
 
 # ── Pipeline ───────────────────────────────────────────────────────────────────
@@ -171,21 +142,52 @@ def run_pipeline(
 
     # ══ STAGE 2: VISION LOOKUP ════════════════════════════════════════════════
     if verbose:
-        print(f"\n  [2/5] Vision Lookup  [STUB — real vision module not yet connected]")
+        print(f"\n  [2/5] Vision Lookup")
 
     try:
-        scene = get_scene()
+        t0 = time.perf_counter()
+        scene = get_current_scene()
+        lat = (time.perf_counter() - t0) * 1000
+        objects = scene.get("objects", [])
+
+        if not objects:
+            message = (
+                "No objects detected in the current scene. "
+                "Check the vision scene file before planning."
+            )
+            tracker.record(
+                task_id, "vision_lookup", status="failed",
+                payload={"object_count": 0, "objects": []},
+                error=message,
+                latency_ms=lat,
+            )
+            tracker.complete_task(task_id, success=False)
+            tracker.save()
+            if verbose:
+                print(f"       ✗ Vision lookup failed: {message}")
+            return result
+
         tracker.record(
             task_id, "vision_lookup", status="success",
-            payload={"object_count": len(scene["objects"]), "objects": [o["label"] for o in scene["objects"]]},
-            latency_ms=0.5,
+            payload={"object_count": len(objects), "objects": [o.get("label") for o in objects]},
+            latency_ms=lat,
         )
         if verbose:
-            print(f"       Objects in scene: {[o['label'] for o in scene['objects']]}")
+            print(f"       Objects in scene: {[o.get('label') for o in objects]}")
+
+    except FileNotFoundError as e:
+        message = f"Scene file missing: {e}"
+        tracker.record(task_id, "vision_lookup", status="failed", error=message)
+        tracker.complete_task(task_id, success=False)
+        tracker.save()
+        if verbose:
+            print(f"       ✗ Vision lookup failed: {message}")
+        return result
 
     except Exception as e:
         tracker.record(task_id, "vision_lookup", status="failed", error=str(e))
         tracker.complete_task(task_id, success=False)
+        tracker.save()
         if verbose:
             print(f"       ✗ Vision lookup failed: {e}")
         return result
