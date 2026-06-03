@@ -64,24 +64,26 @@ SEP = "═" * 60
 _USE_LIVE = os.getenv("USE_LIVE_SIMULATION", "false").strip().lower() == "true"
 
 
-def _get_scene_and_robot(sim=None):
+def _get_scene_and_robot(sim=None, verbose: bool = True):
     """
     Return (scene_dict, robot_instance) from either live simulation or JSON.
 
     If USE_LIVE_SIMULATION=true and a Simulation instance is provided,
-    calls sim.get_live_scene() and sim.get_robot().
+    calls sim.get_live_scene(verbose) which prints the detection table
+    inline inside Stage 2 when verbose=True.
 
     Otherwise falls back to the existing JSON-based get_current_scene()
     and a fresh MockRobot.
 
     Args:
-        sim : Simulation instance (or None for JSON mode).
+        sim     : Simulation instance (or None for JSON mode).
+        verbose : Whether to print the detection summary table.
 
     Returns:
         (scene dict, robot instance)
     """
     if _USE_LIVE and sim is not None:
-        scene = sim.get_live_scene()
+        scene = sim.get_live_scene(verbose=verbose)
         robot = sim.get_robot()
     else:
         scene = get_current_scene()
@@ -185,7 +187,7 @@ def run_pipeline(
 
     try:
         t0 = time.perf_counter()
-        scene, robot = _get_scene_and_robot(sim)
+        scene, robot = _get_scene_and_robot(sim, verbose=verbose)
         lat = (time.perf_counter() - t0) * 1000
         objects = scene.get("objects", [])
 

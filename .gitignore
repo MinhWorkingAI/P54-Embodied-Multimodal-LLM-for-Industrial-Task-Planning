@@ -213,3 +213,7 @@ __marimo__/
 capstone/
 .DS_Store
 *.DS_Store
+
+
+
+\simulation_backend\vision\detection_models
