@@ -2,7 +2,7 @@ import pybullet as p
 import pybullet_data
 import numpy as np
 import time
-
+from simulation_backend.mock_robot import CommandResult
 
 class RealRobot:
 
@@ -98,7 +98,12 @@ class RealRobot:
 
             p.stepSimulation()
             time.sleep(1 / 240)
-
+       
+        return CommandResult(
+            success=True,
+            command="move",
+            message=f"Moved to {target_position}"
+        )
     # ============================================================
     # GRIPPER FUNCTIONS
     # ============================================================
@@ -117,14 +122,20 @@ class RealRobot:
 
     def locate(self, object_name):
 
-        object_id = self.object_registry.get_object_id(object_name)
+        entry = self.object_registry.get_by_label(object_name)
 
-        if object_id is None:
-            raise ValueError(f"Object not found: {object_name}")
+        if entry is None:
+            return CommandResult(
+                success=False,
+                command="locate",
+                message=f"Object not found: {object_name}"
+            )
 
-        position, orientation = p.getBasePositionAndOrientation(object_id)
-
-        return position
+        return CommandResult(
+            success=True,
+            command="locate",
+            message=f"Found '{object_name}' at {entry.position}"
+        )
 
     def attach_object(self, object_id):
 
@@ -164,38 +175,62 @@ class RealRobot:
 
         print(f"[INFO] Picking object: {object_name}")
 
-        object_id = self.object_registry.get_object_id(object_name)
+        entry = self.object_registry.get_by_label(object_name)
 
-        if object_id is None:
+        if entry is None:
             raise ValueError(f"Object not found: {object_name}")
+
+        object_id = entry.body_id
 
         object_position, _ = p.getBasePositionAndOrientation(object_id)
 
         x, y, z = object_position
 
         hover_position = [x, y, z + 0.15]
-
         grasp_position = [x, y, z + 0.03]
 
-        # Move above object
         self.move_to(hover_position)
 
-        # Move down
         self.move_to(grasp_position)
 
-        # Close gripper
         self.close_gripper()
 
-        # Attach object
         self.attach_object(object_id)
 
         self.held_object = object_name
 
-        # Lift object
         self.move_to(hover_position)
 
         print(f"[SUCCESS] Picked {object_name}")
 
+        return CommandResult(
+            success=True,
+            command="pick",
+            message=f"Picked {object_name}"
+        )
+
+    def move_to_object(self, object_name):
+
+        entry = self.object_registry.get_by_label(object_name)
+
+        if entry is None:
+            return CommandResult(
+                success=False,
+                command="move",
+                message=f"Object not found: {object_name}"
+            )
+
+        x, y, z = entry.position
+
+        hover_position = [x, y, z + 0.15]
+
+        self.move_to(hover_position)
+
+        return CommandResult(
+            success=True,
+            command="move",
+            message=f"Moved above {object_name}"
+        )
     # ============================================================
     # PLACE FUNCTION
     # ============================================================
@@ -228,7 +263,12 @@ class RealRobot:
         self.move_to(hover_position)
 
         print("[SUCCESS] Object placed")
-
+        
+        return CommandResult(
+            success=True,
+            command="place",
+            message="Object placed"
+        )
     # ============================================================
     # RESET FUNCTION
     # ============================================================

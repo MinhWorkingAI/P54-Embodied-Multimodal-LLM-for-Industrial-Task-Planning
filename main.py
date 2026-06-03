@@ -102,14 +102,22 @@ def setup_simulation():
     )
 
     # Register objects
-    object_registry.register_object(
-        "red block",
-        red_block
+    object_registry.register(
+        body_id=red_block,
+        label="red block",
+        color=[1.0, 0.0, 0.0, 1.0],
+        position=(0.5, 0.2, 0.02),
+        graspable=True,
+        mass_kg=1.0
     )
 
-    object_registry.register_object(
-        "blue block",
-        blue_block
+    object_registry.register(
+        body_id=blue_block,
+        label="blue block",
+        color=[0.0, 0.0, 1.0, 1.0],
+        position=(0.6, -0.2, 0.02),
+        graspable=True,
+        mass_kg=1.0
     )
 
     return robot_id, object_registry
