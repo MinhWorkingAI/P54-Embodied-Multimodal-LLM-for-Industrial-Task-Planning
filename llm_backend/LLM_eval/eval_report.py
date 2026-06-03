@@ -38,7 +38,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from test_cases import TEST_CASES, get_all_categories
-from baseline_parser import run_baseline_evaluation
+from llm_backend.LLM_eval.baseline_parser import run_baseline_evaluation
 from model_registry import get_available_models, MODEL_DISPLAY_NAMES
 
 SEP  = "═" * 70
