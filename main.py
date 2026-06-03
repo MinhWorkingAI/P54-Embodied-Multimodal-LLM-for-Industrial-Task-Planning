@@ -101,6 +101,18 @@ def setup_simulation():
         [0.6, -0.2, 0.02]
     )
 
+    left_tray = p.loadURDF(
+        "tray/traybox.urdf",
+        [0.3, 0.3, 0.02],
+        globalScaling=0.35
+    )
+
+    right_tray = p.loadURDF(
+        "tray/traybox.urdf",
+        [0.7, -0.3, 0.02],
+        globalScaling=0.35
+    )
+
     # Register objects
     object_registry.register(
         body_id=red_block,
@@ -118,6 +130,24 @@ def setup_simulation():
         position=(0.6, -0.2, 0.02),
         graspable=True,
         mass_kg=1.0
+    )
+
+    object_registry.register(
+        body_id=left_tray,
+        label="left tray",
+        color=[0.5,0.5,0.5,1.0],
+        position=(0.3,0.3,0.02),
+        graspable=False,
+        mass_kg=0.0
+    )
+
+    object_registry.register(
+        body_id=right_tray,
+        label="right tray",
+        color=[0.5,0.5,0.5,1.0],
+        position=(0.7,-0.3,0.02),
+        graspable=False,
+        mass_kg=0.0
     )
 
     return robot_id, object_registry
@@ -287,7 +317,10 @@ def run_pipeline(
         )
 
         result["execution"] = execution_result
-
+        if not execution_result.success:
+            tracker.complete_task(task_id, success=False)
+            return result
+        
     except Exception as e:
 
         print(f"Execution Error: {e}")

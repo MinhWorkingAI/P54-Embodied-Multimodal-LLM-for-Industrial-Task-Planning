@@ -235,14 +235,20 @@ class RealRobot:
     # PLACE FUNCTION
     # ============================================================
 
-    def place(self, target_position):
+    def place(self, destination_name):
 
-        print(f"[INFO] Placing object at: {target_position}")
+        print(f"[INFO] Placing object at: {destination_name}")
 
-        if self.held_object is None:
-            raise ValueError("No object currently held")
+        entry = self.object_registry.get_by_label(destination_name)
 
-        x, y, z = target_position
+        if entry is None:
+            return CommandResult(
+                success=False,
+                command="place",
+                message=f"Destination not found: {destination_name}"
+            )
+
+        x, y, z = entry.position
 
         hover_position = [x, y, z + 0.15]
 
@@ -263,7 +269,7 @@ class RealRobot:
         self.move_to(hover_position)
 
         print("[SUCCESS] Object placed")
-        
+
         return CommandResult(
             success=True,
             command="place",
