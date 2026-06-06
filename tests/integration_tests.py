@@ -21,12 +21,12 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import pytest
-from schema import ParsedInstruction, ActionType, ConfidenceLevel
+from llm_backend.schema import ParsedInstruction, ActionType, ConfidenceLevel
 from task_planner.planner import TaskPlanner, _apply_spatial_offset
-from execution.action_schema import ActionPlan, CommandType
-from execution.mock_robot    import MockRobot
-from execution.executor      import Executor
-from tracker                 import PipelineTracker
+from simulation_backend.action_schema import ActionPlan, CommandType
+from simulation_backend.mock_robot    import MockRobot
+from simulation_backend.executor      import Executor
+from llm_backend.tracker                 import PipelineTracker
 
 
 # ── Shared fixtures ────────────────────────────────────────────────────────────
@@ -451,7 +451,7 @@ class TestLLMPipelineIntegration:
     """Requires OPENAI_API_KEY in .env. Run with: pytest -m integration"""
 
     def test_parse_and_plan_simple(self):
-        from parser import parse_instruction
+        from llm_backend.custom_LLM_parser import parse_instruction
         parsed = parse_instruction("pick up the red block")
         assert parsed.action.value == "pick"
         scene   = {"objects": [
@@ -462,7 +462,7 @@ class TestLLMPipelineIntegration:
         assert plan.total_steps >= 3
 
     def test_parse_and_plan_spatial(self):
-        from parser import parse_instruction
+        from llm_backend.custom_LLM_parser import parse_instruction
         parsed = parse_instruction(
             "place the red block to the left of the blue block"
         )
