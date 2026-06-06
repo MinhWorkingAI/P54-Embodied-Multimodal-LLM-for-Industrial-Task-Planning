@@ -4,7 +4,8 @@ main.py
 Wires all modules together:
     User instruction
         → LLM parse          (llm_backend/custom_LLM_parser.py)
-        → Vision lookup      (vision_backend/scene_representation.py)
+        → Vision lookup      (vision_backend/scene_representation.py  OR
+                              simulation_backend/simulation.py)
         → Task plan          (task_planner/planner.py)
         → Execution          (simulation_backend/executor.py)
         → Feedback           (inline validation)
@@ -12,9 +13,16 @@ Wires all modules together:
 All stages are logged via tracker.py with a unique task_id.
 LLM backend is controlled by LLM_BACKEND in .env — not a CLI flag.
 
+Vision source is controlled by USE_LIVE_SIMULATION in .env:
+    USE_LIVE_SIMULATION=false  (default) — reads JSON from disk
+    USE_LIVE_SIMULATION=true             — uses live PyBullet simulation
+
 Usage:
-    # Single instruction
+    # Single instruction (JSON fallback)
     python main.py "pick up the red block and place it in the left tray"
+
+    # Single instruction (live simulation)
+    USE_LIVE_SIMULATION=true python main.py "pick up the red block"
 
     # Interactive mode
     python main.py --interactive
@@ -29,72 +37,79 @@ import logging
 import time
 
 os.environ["PYDANTIC_DISABLE_PLUGINS"] = "1"
-# This is needed to prevent pydantic from trying to load plugins that may not be compatible with our environment.   
 
-# Ensure imports work from project root
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from dotenv import load_dotenv
 load_dotenv()
 
 # ── Module imports ─────────────────────────────────────────────────────────────
-from llm_backend.custom_LLM_parser     import parse_instruction
-from llm_backend.schema     import ParsedInstruction, ConfidenceLevel
-from llm_backend.tracker    import PipelineTracker
-from task_planner.planner  import TaskPlanner
-from simulation_backend.mock_robot  import MockRobot
-from simulation_backend.executor    import Executor
+from llm_backend.custom_LLM_parser import parse_instruction
+from llm_backend.schema            import ParsedInstruction, ConfidenceLevel
+from llm_backend.tracker           import PipelineTracker
+from task_planner.planner          import TaskPlanner
+from vision_backend.scene_representation import get_current_scene
+from simulation_backend.mock_robot import MockRobot
+from simulation_backend.executor   import Executor
 from simulation_backend.action_schema import plan_to_commands
 logging.basicConfig(
-    level=logging.WARNING,  # Set to DEBUG for verbose output
+    level=logging.WARNING,
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s"
 )
 
 SEP = "═" * 60
 
-# ── Default scene (stub until vision module is ready) ──────────────────────────
-# STUB: Replace this with a real call to the vision module when ready:
-#   from vision_module.scene_representation import get_current_scene
-#   scene = get_current_scene()
+# ── Live simulation flag ───────────────────────────────────────────────────────
+_USE_LIVE = os.getenv("USE_LIVE_SIMULATION", "false").strip().lower() == "true"
 
-DEFAULT_SCENE = {
-    "objects": [
-        {"label": "red block",    "position": (2.5, 1.0)},
-        {"label": "blue block",   "position": (3.0, 2.0)},
-        {"label": "green block",  "position": (1.5, 3.0)},
-        {"label": "yellow block", "position": (4.0, 2.5)},
-        {"label": "left tray",    "position": (6.0, 1.0)},
-        {"label": "right tray",   "position": (8.0, 1.0)},
-        {"label": "workstation",  "position": (5.0, 5.0)},
-    ]
-}
 
-def get_scene() -> dict:
-    try:
-        from vision_backend.scene_representation import get_current_scene
-        result = get_current_scene()
-        if result and result.get("objects"):
-            return result
-    except Exception:
-        pass
-    return DEFAULT_SCENE
+def _get_scene_and_robot(sim=None, verbose: bool = True):
+    """
+    Return (scene_dict, robot_instance) from either live simulation or JSON.
+
+    If USE_LIVE_SIMULATION=true and a Simulation instance is provided,
+    calls sim.get_live_scene(verbose) which prints the detection table
+    inline inside Stage 2 when verbose=True.
+
+    Otherwise falls back to the existing JSON-based get_current_scene()
+    and a fresh MockRobot.
+
+    Args:
+        sim     : Simulation instance (or None for JSON mode).
+        verbose : Whether to print the detection summary table.
+
+    Returns:
+        (scene dict, robot instance)
+    """
+    if _USE_LIVE and sim is not None:
+        scene = sim.get_live_scene(verbose=verbose)
+        robot = sim.get_robot()
+    else:
+        scene = get_current_scene()
+        robot = MockRobot()
+    return scene, robot
+
+
 # ── Pipeline ───────────────────────────────────────────────────────────────────
 
 def run_pipeline(
-    instruction:     str,
-    verbose:         bool = True,
-    tracker:         PipelineTracker | None = None,
+    instruction: str,
+    verbose:     bool = True,
+    tracker:     PipelineTracker | None = None,
+    sim=None,
 ) -> dict:
     """
     Run the full pipeline for a single instruction.
 
     Args:
-        instruction: Natural language task instruction
-        verbose:     Print progress to stdout
-        tracker:     PipelineTracker instance for cross-domain logging
+        instruction : Natural language task instruction.
+        verbose     : Print progress to stdout.
+        tracker     : PipelineTracker instance for cross-domain logging.
+        sim         : Simulation instance (required for live mode).
+                      Pass None to use JSON scene fallback.
 
     Returns:
-        Result dict with keys: success, task_id, parsed, plan, execution
+        Result dict — keys: success, task_id, parsed, plan, execution.
     """
     if tracker is None:
         tracker = PipelineTracker()
@@ -104,11 +119,14 @@ def run_pipeline(
     # ── Register task ──────────────────────────────────────────────────────────
     task_id = tracker.new_task(instruction, model=_backend)
 
+    vision_label = "Live Simulation" if (_USE_LIVE and sim) else "JSON file"
+
     if verbose:
         print(f"\n{SEP}")
         print(f"  PIPELINE START")
         print(f"  Instruction : {instruction}")
         print(f"  Model       : {_backend}")
+        print(f"  Vision      : {vision_label}")
         print(f"  Task ID     : {task_id}")
         print(SEP)
 
@@ -145,13 +163,12 @@ def run_pipeline(
             print(f"       Confidence  : {parsed.confidence.value}")
             print(f"       Latency     : {lat:.0f}ms")
 
-        # Low confidence warning
         if parsed.confidence == ConfidenceLevel.LOW:
             if verbose:
                 print(f"\n  ⚠  Low confidence — instruction may be ambiguous")
                 print(f"     Notes: {parsed.notes}")
             tracker.record(task_id, "feedback", status="retry",
-                          payload={"reason": "low_confidence", "notes": parsed.notes})
+                           payload={"reason": "low_confidence", "notes": parsed.notes})
             result["success"] = False
             tracker.complete_task(task_id, success=False)
             return result
@@ -165,34 +182,51 @@ def run_pipeline(
 
     # ══ STAGE 2: VISION LOOKUP ════════════════════════════════════════════════
     if verbose:
-        scene = get_scene()
-        if scene is DEFAULT_SCENE:
-            print(f"\n  [2/5] Vision Lookup  [STUB — real vision module not connected]")
-        else:
-            print(f"\n  [2/5] Vision Lookup  [REAL — using live scene data]")
-        try:
-            tracker.record(
-                task_id, "vision_lookup", status="success", latency_ms=0.5,
-                payload={"object_count": len(scene["objects"]),
-                         "objects": [o["label"] for o in scene["objects"]]})
-            print(f"       Objects in scene: {[o['label'] for o in scene['objects']]}")
-        except Exception as e:
-            tracker.record(task_id, "vision_lookup", status="failed", error=str(e))
-            tracker.complete_task(task_id, success=False)
+        print(f"\n  [2/5] Vision Lookup  [{vision_label}]")
+
+    try:
+        t0 = time.perf_counter()
+        scene, robot = _get_scene_and_robot(sim, verbose=verbose)
+        lat = (time.perf_counter() - t0) * 1000
+        objects = scene.get("objects", [])
+
+        if not objects:
+            message = (
+                "No objects detected in the current scene. "
+                "Check the vision scene file or simulation before planning."
+            )
+            print(f"       ⚠ {message}")
+
+        tracker.record(
+            task_id, "vision_lookup", status="success",
+            payload={
+                "object_count": len(objects),
+                "objects": [o.get("label") for o in objects],
+                "source": vision_label,
+            },
+            latency_ms=lat,
+        )
+        
+        if verbose:
+            print(f"       Objects in scene: {[o.get('label') for o in objects]}")
+            print(f"       Latency         : {lat:.0f}ms")
+
+    except FileNotFoundError as e:
+        message = f"Scene file missing: {e}"
+        tracker.record(task_id, "vision_lookup", status="failed", error=message)
+        tracker.complete_task(task_id, success=False)
+        tracker.save()
+        if verbose:
+            print(f"       ✗ Vision lookup failed: {message}")
+        return result
+
+    except Exception as e:
+        tracker.record(task_id, "vision_lookup", status="failed", error=str(e))
+        tracker.complete_task(task_id, success=False)
+        tracker.save()
+        if verbose:
             print(f"       ✗ Vision lookup failed: {e}")
-            return result
-    else:
-        scene = get_scene()
-        try:
-            tracker.record(
-                task_id, "vision_lookup", status="success", latency_ms=0.5,
-                payload={"object_count": len(scene["objects"]),
-                         "objects": [o["label"] for o in scene["objects"]]})
-        except Exception as e:
-            tracker.record(task_id, "vision_lookup", status="failed", error=str(e))
-            tracker.complete_task(task_id, success=False)
-            return result
-    
+        return result
 
     # ══ STAGE 3: TASK PLANNING ════════════════════════════════════════════════
     if verbose:
@@ -208,7 +242,10 @@ def run_pipeline(
 
         tracker.record(
             task_id, "task_plan", status="success",
-            payload={"steps": plan.total_steps, "commands": [c.command_type.value for c in plan.commands]},
+            payload={
+                "steps":    plan.total_steps,
+                "commands": [c.command_type.value for c in plan.commands],
+            },
             latency_ms=lat,
         )
         if verbose:
@@ -224,11 +261,11 @@ def run_pipeline(
         return result
 
     # ══ STAGE 4: EXECUTION ════════════════════════════════════════════════════
+    robot_label = type(robot).__name__
     if verbose:
-        print(f"\n  [4/5] Execution  [MockRobot]")
+        print(f"\n  [4/5] Execution  [{robot_label}]")
 
     try:
-        robot    = MockRobot()
         robot.load_scene(scene)
         executor = Executor(robot, tracker=tracker, task_id=task_id)
         exec_res = executor.execute(plan, verbose=verbose)
@@ -275,12 +312,15 @@ def run_pipeline(
 
 # ── Interactive mode ───────────────────────────────────────────────────────────
 
-def run_interactive() -> None:
+def run_interactive(sim=None) -> None:
     tracker  = PipelineTracker()
     _backend = os.getenv("LLM_BACKEND", "openai")
+    vision_label = "Live Simulation" if (_USE_LIVE and sim) else "JSON file"
+
     print(f"\n{SEP}")
     print("  Multimodal LLM — Industrial Task Planning Pipeline")
-    print(f"  Model: {_backend}  |  Type 'quit' to exit  |  Type 'status' for summary")
+    print(f"  Model: {_backend}  |  Vision: {vision_label}")
+    print("  Type 'quit' to exit  |  'status' for summary  |  'reset' to reset scene")
     print(SEP + "\n")
 
     while True:
@@ -295,7 +335,11 @@ def run_interactive() -> None:
             if instruction.lower() == "status":
                 tracker.print_summary()
                 continue
-            run_pipeline(instruction, verbose=True, tracker=tracker)
+            if instruction.lower() == "reset" and sim is not None:
+                sim.reset()
+                print("  Scene reset to initial positions.\n")
+                continue
+            run_pipeline(instruction, verbose=True, tracker=tracker, sim=sim)
 
         except KeyboardInterrupt:
             print("\nGoodbye!")
@@ -308,15 +352,40 @@ def run_interactive() -> None:
 # ── Entry point ────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser(description="Multimodal LLM Industrial Task Planning Pipeline")
+    ap = argparse.ArgumentParser(
+        description="Multimodal LLM Industrial Task Planning Pipeline"
+    )
     ap.add_argument("instruction", nargs="?", help="Instruction to execute")
     ap.add_argument("--interactive", "-i", action="store_true", help="Interactive mode")
-    ap.add_argument("--quiet", "-q", action="store_true", help="Suppress verbose output")
+    ap.add_argument("--quiet",       "-q", action="store_true", help="Suppress verbose output")
+    ap.add_argument("--live",        "-l", action="store_true",
+                    help="Force live simulation (overrides USE_LIVE_SIMULATION env var)")
     args = ap.parse_args()
 
-    if args.interactive:
-        run_interactive()
-    elif args.instruction:
-        run_pipeline(args.instruction, verbose=not args.quiet)
-    else:
-        ap.print_help()
+    # --live flag overrides the env var
+    if args.live:
+        os.environ["USE_LIVE_SIMULATION"] = "true"
+        _USE_LIVE = True  # noqa: F811
+
+    # Start simulation if live mode is requested
+    sim = None
+    if _USE_LIVE:
+        try:
+            from simulation_backend.simulation import Simulation
+            sim = Simulation()
+            print(f"  Simulation started — {len(sim.registry)} objects loaded.")
+        except Exception as e:
+            print(f"  ✗ Failed to start simulation: {e}")
+            print("  Falling back to JSON scene.")
+            sim = None
+
+    try:
+        if args.interactive:
+            run_interactive(sim=sim)
+        elif args.instruction:
+            run_pipeline(args.instruction, verbose=not args.quiet, sim=sim)
+        else:
+            ap.print_help()
+    finally:
+        if sim is not None:
+            sim.disconnect()
