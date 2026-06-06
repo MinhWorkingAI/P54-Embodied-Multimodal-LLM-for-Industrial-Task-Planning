@@ -673,94 +673,6 @@
     "task_id": "invalid_action_001",
     "instruction": "pick up the yellow block",
     "model": "vision_validation",
-    "created_at": "2026-04-30T16:11:54.553777",
-    "status": "failed",
-    "stages": {
-      "vision_lookup": {
-        "stage": "vision_lookup",
-        "status": "failed",
-        "payload": {
-          "object_target": "yellow block",
-          "available_objects": [
-            "red block",
-            "blue tray",
-            "green block"
-          ]
-        },
-        "error": "Object 'yellow block' not found in scene"
-      }
-    }
-  },
-  {
-    "task_id": "invalid_action_001",
-    "instruction": "pick up the yellow block",
-    "model": "vision_validation",
-    "created_at": "2026-05-03T11:10:54.137517",
-    "status": "failed",
-    "stages": {
-      "vision_lookup": {
-        "stage": "vision_lookup",
-        "status": "failed",
-        "payload": {
-          "object_target": "yellow block",
-          "available_objects": [
-            "red block",
-            "blue tray",
-            "green block"
-          ]
-        },
-        "error": "Object 'yellow block' not found in scene"
-      }
-    }
-  },
-  {
-    "task_id": "invalid_action_001",
-    "instruction": "pick up the yellow block",
-    "model": "vision_validation",
-    "created_at": "2026-05-03T11:11:48.415253",
-    "status": "failed",
-    "stages": {
-      "vision_lookup": {
-        "stage": "vision_lookup",
-        "status": "failed",
-        "payload": {
-          "object_target": "yellow block",
-          "available_objects": [
-            "red block",
-            "blue tray",
-            "green block"
-          ]
-        },
-        "error": "Object 'yellow block' not found in scene"
-      }
-    }
-  },
-  {
-    "task_id": "invalid_action_001",
-    "instruction": "pick up the yellow block",
-    "model": "vision_validation",
-    "created_at": "2026-05-06T15:17:07.120613",
-    "status": "failed",
-    "stages": {
-      "vision_lookup": {
-        "stage": "vision_lookup",
-        "status": "failed",
-        "payload": {
-          "object_target": "yellow block",
-          "available_objects": [
-            "red block",
-            "blue tray",
-            "green block"
-          ]
-        },
-        "error": "Object 'yellow block' not found in scene"
-      }
-    }
-  },
-  {
-    "task_id": "invalid_action_001",
-    "instruction": "pick up the yellow block",
-    "model": "vision_validation",
     "created_at": "2026-05-06T15:17:09.505568",
     "status": "failed",
     "stages": {
@@ -778,5 +690,223 @@
         "error": "Object 'yellow block' not found in scene"
       }
     }
+  },
+  {
+    "task_id": "5c66fa0d",
+    "instruction": "pick up the red block and place it in the left tray",
+    "model": "openai",
+    "created_at": "2026-06-06T17:47:31.486165+00:00",
+    "status": "failed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-06-06T17:47:33.537096+00:00",
+        "latency_ms": 2050.6,
+        "payload": {
+          "action": "pick",
+          "object_target": "red block",
+          "destination": "left tray",
+          "spatial_relation": "in",
+          "confidence": "high",
+          "raw_instruction": "pick up the red block and place it in the left tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "failed",
+        "timestamp": "2026-06-06T17:47:33.537165+00:00",
+        "latency_ms": null,
+        "payload": null,
+        "error": "name 'get_current_scene' is not defined"
+      }
+    },
+    "completed_at": "2026-06-06T17:47:33.537174+00:00"
+  },
+  {
+    "task_id": "e6003cb1",
+    "instruction": "pick up the red block and place it in the left tray",
+    "model": "openai",
+    "created_at": "2026-06-06T17:48:29.616649+00:00",
+    "status": "failed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-06-06T17:48:30.789514+00:00",
+        "latency_ms": 1172.6,
+        "payload": {
+          "action": "pick",
+          "object_target": "red block",
+          "destination": "left tray",
+          "spatial_relation": "in",
+          "confidence": "high",
+          "raw_instruction": "pick up the red block and place it in the left tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "failed",
+        "timestamp": "2026-06-06T17:48:30.789619+00:00",
+        "latency_ms": null,
+        "payload": null,
+        "error": "name 'get_current_scene' is not defined"
+      }
+    },
+    "completed_at": "2026-06-06T17:48:30.789633+00:00"
+  },
+  {
+    "task_id": "76c73624",
+    "instruction": "pick up the red block and place it in the left tray",
+    "model": "openai",
+    "created_at": "2026-06-06T17:49:28.042720+00:00",
+    "status": "failed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-06-06T17:49:29.355000+00:00",
+        "latency_ms": 1312.1,
+        "payload": {
+          "action": "pick",
+          "object_target": "red block",
+          "destination": "left tray",
+          "spatial_relation": "in",
+          "confidence": "high",
+          "raw_instruction": "pick up the red block and place it in the left tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "failed",
+        "timestamp": "2026-06-06T17:49:29.355113+00:00",
+        "latency_ms": null,
+        "payload": null,
+        "error": "name 'scene' is not defined"
+      }
+    },
+    "completed_at": "2026-06-06T17:49:29.355127+00:00"
+  },
+  {
+    "task_id": "d27638a5",
+    "instruction": "pick up the red block and place it in the left tray",
+    "model": "openai",
+    "created_at": "2026-06-06T17:52:11.202585+00:00",
+    "status": "failed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-06-06T17:52:13.396695+00:00",
+        "latency_ms": 2193.9,
+        "payload": {
+          "action": "pick",
+          "object_target": "red block",
+          "destination": "left tray",
+          "spatial_relation": "in",
+          "confidence": "high",
+          "raw_instruction": "pick up the red block and place it in the left tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "failed",
+        "timestamp": "2026-06-06T17:52:13.396761+00:00",
+        "latency_ms": null,
+        "payload": null,
+        "error": "name 'scene' is not defined"
+      }
+    },
+    "completed_at": "2026-06-06T17:52:13.396771+00:00"
+  },
+  {
+    "task_id": "302ffe20",
+    "instruction": "pick up the red block and place it in the blue tray",
+    "model": "openai",
+    "created_at": "2026-06-06T18:03:30.545917+00:00",
+    "status": "completed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-06-06T18:03:32.336989+00:00",
+        "latency_ms": 1790.9,
+        "payload": {
+          "action": "pick",
+          "object_target": "red block",
+          "destination": "blue tray",
+          "spatial_relation": "in",
+          "confidence": "high",
+          "raw_instruction": "pick up the red block and place it in the blue tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "success",
+        "timestamp": "2026-06-06T18:03:32.339319+00:00",
+        "latency_ms": 0.5,
+        "payload": {
+          "object_count": 3,
+          "objects": [
+            "red block",
+            "blue tray",
+            "green block"
+          ]
+        },
+        "error": null
+      },
+      "task_plan": {
+        "stage": "task_plan",
+        "status": "success",
+        "timestamp": "2026-06-06T18:03:32.339677+00:00",
+        "latency_ms": 0.3,
+        "payload": {
+          "steps": 5,
+          "commands": [
+            "locate",
+            "move",
+            "pick",
+            "move",
+            "place"
+          ]
+        },
+        "error": null
+      },
+      "execution": {
+        "stage": "execution",
+        "status": "success",
+        "timestamp": "2026-06-06T18:03:32.340016+00:00",
+        "latency_ms": 0.0,
+        "payload": {
+          "step": 5,
+          "command": "place",
+          "result": "Placed 'red block' at 'blue tray' (350.0, 235.0)"
+        },
+        "error": null
+      },
+      "feedback": {
+        "stage": "feedback",
+        "status": "success",
+        "timestamp": "2026-06-06T18:03:32.340047+00:00",
+        "latency_ms": null,
+        "payload": {
+          "steps_completed": 5,
+          "total_steps": 5,
+          "latency_ms": 0.16016600420698524
+        },
+        "error": null
+      }
+    },
+    "completed_at": "2026-06-06T18:03:32.340061+00:00"
   }
 ]
