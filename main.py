@@ -55,8 +55,6 @@ logging.basicConfig(
 
 SEP = "═" * 60
 
-<<<<<<< HEAD
-=======
 # ── Default scene (stub until vision module is ready) ──────────────────────────
 # STUB: Replace this with a real call to the vision module when ready:
 #   from vision_module.scene_representation import get_current_scene
@@ -77,7 +75,6 @@ DEFAULT_SCENE = {
 def get_scene() -> dict:
     return get_planner_scene("scene_representation.json")
 
->>>>>>> 1c4e116 (init commit for everything and main uodate based on lakshit's work)
 
 # ── Pipeline ───────────────────────────────────────────────────────────────────
 
