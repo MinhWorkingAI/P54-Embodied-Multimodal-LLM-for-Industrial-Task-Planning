@@ -73,8 +73,11 @@ DEFAULT_SCENE = {
 }
 
 def get_scene() -> dict:
-    return get_planner_scene("scene_representation.json")
-
+    try:
+        from vision_backend.scene_representation import get_planner_scene
+        return get_planner_scene()
+    except Exception:
+        return DEFAULT_SCENE  # fallback to stub
 
 # ── Pipeline ───────────────────────────────────────────────────────────────────
 
