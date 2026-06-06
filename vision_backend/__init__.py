@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-"""Vision backend package."""
-
-=======
 """
 vision_backend/
 ---------------
@@ -39,4 +35,3 @@ __all__ = [
     "create_detection",
     "create_scene_output",
 ]
->>>>>>> 1c4e116 (init commit for everything and main uodate based on lakshit's work)

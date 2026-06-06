@@ -21,12 +21,12 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import pytest
-from schema import ParsedInstruction, ActionType, ConfidenceLevel
+from llm_backend.schema import ParsedInstruction, ActionType, ConfidenceLevel
 from task_planner.planner import TaskPlanner, _apply_spatial_offset
-from execution.action_schema import ActionPlan, CommandType
-from execution.mock_robot    import MockRobot
-from execution.executor      import Executor
-from tracker                 import PipelineTracker
+from simulation_backend.action_schema import ActionPlan, CommandType
+from simulation_backend.mock_robot    import MockRobot
+from simulation_backend.executor      import Executor
+from llm_backend.tracker                 import PipelineTracker
 
 
 # ── Shared fixtures ────────────────────────────────────────────────────────────
