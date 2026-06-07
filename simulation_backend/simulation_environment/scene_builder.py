@@ -113,7 +113,6 @@ class SceneBuilder:
         Returns:
             Rich scene dict matching scene_abstraction.json format
         """
-        # Build lookup dicts keyed by body_id for each source
         detector_map     = {d.body_id: d for d in (detector_results or [])}
         seg_map          = {d.body_id: d for d in (segmentation_results or [])}
         gt_map           = {d.body_id: d for d in (ground_truth_results or [])}
@@ -132,7 +131,6 @@ class SceneBuilder:
                 )
                 continue
 
-            # Update registry with latest position
             self._registry.update_position(entry.body_id, detection.position_3d)
 
             x, y, z = detection.position_3d
@@ -141,19 +139,20 @@ class SceneBuilder:
                 "label":       entry.label,
                 "attributes":  entry.attributes,
                 "position": {
-                    "coordinates_3d": {"x": round(x, 4),
-                                       "y": round(y, 4),
-                                       "z": round(z, 4)},
+                    "coordinates_3d": {
+                        "x": round(x, 4),
+                        "y": round(y, 4),
+                        "z": round(z, 4),
+                    },
                     "bounding_box_2d": detection.bounding_box_2d,
                 },
-                "spatial_relationships": [],   # filled in below
+                "spatial_relationships": [],
                 "graspable":   entry.graspable,
                 "confidence":  round(detection.confidence, 3),
                 "source":      detection.source,
             }
             detected_objects.append(obj_dict)
 
-        # Compute spatial relationships between all detected objects
         self._compute_spatial_relationships(detected_objects)
 
         scene = {
@@ -172,23 +171,23 @@ class SceneBuilder:
         """
         Convert the rich scene dict to the simple format planner.py expects.
 
-        This is the adapter between the rich vision output and the
-        existing task_planner/planner.py interface. When planner.py is
-        upgraded to use 3D coordinates and spatial relationships, this
-        method can be removed.
+        Includes the full (x, y, z) 3D position so that the real robot arm
+        receives correct Z values for approach height calculations.
+        Without Z the arm targets the wrong height — blocks are at z=0.05
+        above the table, not z=0.0.
 
         Args:
             rich_scene: Output of build()
 
         Returns:
-            {"objects": [{"label": str, "position": (x, y)}]}
+            {"objects": [{"label": str, "position": (x, y, z)}]}
         """
         objects = []
         for obj in rich_scene.get("detected_objects", []):
             coords = obj["position"]["coordinates_3d"]
             objects.append({
                 "label":    obj["label"],
-                "position": (coords["x"], coords["y"]),
+                "position": (coords["x"], coords["y"], coords["z"]),
             })
         return {"objects": objects}
 
@@ -203,7 +202,7 @@ class SceneBuilder:
     ) -> Optional[Detection]:
         """
         Return the best available detection for a body_id.
-        Priority: primary detector → segmentation → ground truth.
+        Priority: primary detector -> segmentation -> ground truth.
         """
         if body_id in detector_map:
             return detector_map[body_id]
@@ -231,9 +230,6 @@ class SceneBuilder:
         Currently computed:
             on_top_of : object A is directly above object B
             near_to   : object A is within proximity threshold of object B
-
-        Relationships are added in-place to each object's
-        spatial_relationships list.
         """
         for i, obj_a in enumerate(objects):
             a_coords = obj_a["position"]["coordinates_3d"]
@@ -248,9 +244,8 @@ class SceneBuilder:
 
                 dx = abs(ax - bx)
                 dy = abs(ay - by)
-                dz = az - bz   # signed — positive means A is above B
+                dz = az - bz
 
-                # on_top_of: A is higher than B and XY positions overlap
                 if (dz > _ON_TOP_OF_Z_THRESHOLD
                         and dx < _ON_TOP_OF_XY_THRESHOLD
                         and dy < _ON_TOP_OF_XY_THRESHOLD):
@@ -259,7 +254,6 @@ class SceneBuilder:
                         "target_id": obj_b["object_id"],
                     })
 
-                # near_to: XY distance within threshold (ignoring Z)
                 xy_dist = (dx ** 2 + dy ** 2) ** 0.5
                 if xy_dist < _NEAR_TO_THRESHOLD:
                     obj_a["spatial_relationships"].append({

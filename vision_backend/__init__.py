@@ -1,2 +1,0 @@
-"""Vision backend package."""
-
