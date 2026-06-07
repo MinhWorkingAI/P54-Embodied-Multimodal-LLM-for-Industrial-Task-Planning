@@ -6,13 +6,29 @@ HSV colour threshold detector for the simulation vision pipeline.
 Config is read from environment variables (set in .env):
     COLOUR_MIN_AREA      : min contour area in pixels. Default: 30
     COLOUR_EXPECTED_AREA : expected pixel area of a full block face. Default: 100
-    COLOUR_DEPTH_RADIUS  : depth sampling patch half-size. Default: 3
+    COLOUR_DEPTH_RADIUS  : unused — kept for API compatibility. Default: 3
 
 No model weights, no downloads, no GPU required.
 Runs in under 5ms per frame on CPU using only OpenCV.
 
-HSV ranges are calibrated for PyBullet flat-shaded rendering.
-The exact HSV values are computed from scene_config.yaml RGBA colours:
+How it works:
+    For each registered object:
+        1. Look up its colour attribute ("red", "blue", "green", ...).
+        2. Apply the corresponding HSV mask to the frame.
+        3. Find contours. Take the largest one.
+        4. Skip if area < COLOUR_MIN_AREA (noise filter).
+        5. Compute the centroid pixel (cx, cy).
+        6. Get the bounding box for the contour.
+        7. Read the LIVE 3D world position directly from PyBullet via
+           p.getBasePositionAndOrientation(body_id). This is the correct
+           approach — the depth map gives camera-to-object distance (eye
+           space), not world Z. Only PyBullet knows the real world Z.
+        8. confidence = min(area / COLOUR_EXPECTED_AREA, 1.0).
+
+    Objects with colour attributes not in HSV_RANGES are skipped silently
+    — ground truth fills the gap for those objects.
+
+HSV ranges are calibrated for PyBullet flat-shaded rendering:
 
     Colour      RGB (255 scale)       HSV (OpenCV H: 0-179)
     ----------  -------------------   ----------------------
@@ -24,7 +40,7 @@ The exact HSV values are computed from scene_config.yaml RGBA colours:
     dark grey   (89,  89,  89 )       H=0,   S=0,   V=89
 
 Usage:
-    Set VISION_DETECTOR=colour in .env.
+    Set VISION_DETECTOR=colour in .env. No installation beyond opencv-python.
 """
 
 import logging
@@ -32,6 +48,7 @@ import os
 
 import cv2
 import numpy as np
+import pybullet as p
 
 from simulation_backend.simulation_environment.scene_builder import Detection
 from simulation_backend.vision.camera import CameraFrame
@@ -47,37 +64,27 @@ logger = logging.getLogger(__name__)
 # Each entry: list of (lower_bound, upper_bound) for cv2.inRange().
 # Multiple ranges are OR-combined. Red needs two because H wraps at 0/180.
 #
-# Tolerance applied:
-#   H ± 10   (hue band)
-#   S >= 225 (highly saturated — PyBullet renders pure solid colours)
-#   V >= 170 (bright — flat shading, no shadows on blocks)
-#   Grey / dark grey matched on V range only (S ≈ 0)
+# Tolerance: H ± 10, S >= 225 (pure solid colours), V >= 174 (bright flat shading)
+# Grey / dark grey matched on V range only (S ≈ 0).
 
 HSV_RANGES: dict[str, list[tuple]] = {
     "red": [
-        # H=0 lower wrap
         (np.array([0,   225, 225]), np.array([8,   255, 255])),
-        # H=180 upper wrap
         (np.array([172, 225, 225]), np.array([179, 255, 255])),
     ],
     "blue": [
-        # H=120 centre ± 10
         (np.array([110, 225, 225]), np.array([130, 255, 255])),
     ],
     "green": [
-        # H=60 centre ± 10, V from 174 (PyBullet green V=204)
         (np.array([50,  225, 174]), np.array([70,  255, 255])),
     ],
     "yellow": [
-        # H=30 centre ± 10
         (np.array([20,  225, 225]), np.array([40,  255, 255])),
     ],
     "grey": [
-        # S ≈ 0, V = 140 ± 40
         (np.array([0,   0,   100]), np.array([179, 30,  180])),
     ],
     "dark grey": [
-        # S ≈ 0, V = 89 ± 40
         (np.array([0,   0,   49]),  np.array([179, 30,  129])),
     ],
 }
@@ -90,10 +97,9 @@ class ColourDetector(DetectorBase):
     All config is read from environment variables at init time.
     No scene_config.yaml keys are used.
 
-    Expected pixel areas are calibrated for the default camera position
-    in scene_config.yaml (pos=[1.5, 0.0, 1.8], fov=60, 640x480).
-    The blocks appear as ~100px² faces at that distance.
-    Trays and the workstation are larger — confidence caps at 1.0.
+    World Z is read from PyBullet directly (not from the depth map).
+    The depth map gives eye-space camera distance, not world Z.
+    p.getBasePositionAndOrientation() gives the exact world position.
     """
 
     name = "colour"
@@ -102,12 +108,15 @@ class ColourDetector(DetectorBase):
         super().__init__(registry, config)
         self._min_area      = int(os.getenv("COLOUR_MIN_AREA",      "30"))
         self._expected_area = int(os.getenv("COLOUR_EXPECTED_AREA", "100"))
-        self._depth_radius  = int(os.getenv("COLOUR_DEPTH_RADIUS",  "3"))
+
+        # physics_client injected by simulation.py via the config dict.
+        # Falls back to client 0 (always valid for single-simulation setups).
+        self._physics_client = int(self._cfg.get("_physics_client", 0))
 
         logger.info(
             f"[colour] min_area={self._min_area}  "
             f"expected_area={self._expected_area}  "
-            f"depth_radius={self._depth_radius}"
+            f"physics_client={self._physics_client}"
         )
 
     # ── warmup ────────────────────────────────────────────────────────────────
@@ -127,10 +136,11 @@ class ColourDetector(DetectorBase):
             1. Build a binary mask for that colour in the HSV image.
             2. Find contours and take the largest one.
             3. Skip if area < COLOUR_MIN_AREA.
-            4. Compute centroid pixel (cx, cy).
-            5. Sample depth at centroid -> Z metres.
-            6. Use registry (x, y) + depth Z as 3D position.
-            7. confidence = min(area / COLOUR_EXPECTED_AREA, 1.0).
+            4. Read live world position from PyBullet.
+            5. confidence = min(area / COLOUR_EXPECTED_AREA, 1.0).
+
+        Args:
+            frame : CameraFrame from Camera.capture()
 
         Returns:
             list[Detection] — one per colour-matched object found.
@@ -169,24 +179,36 @@ class ColourDetector(DetectorBase):
                 )
                 continue
 
-            M = cv2.moments(best)
-            if M["m00"] == 0:
-                continue
-            cx = int(M["m10"] / M["m00"])
-            cy = int(M["m01"] / M["m00"])
-
+            # Bounding box from contour
             bx, by, bw, bh = cv2.boundingRect(best)
             bbox = {"x_min": bx, "y_min": by, "x_max": bx + bw, "y_max": by + bh}
 
-            z          = self._depth_at_bbox_centre(frame, bbox, self._depth_radius)
-            x          = float(entry.position[0])
-            y          = float(entry.position[1])
+            # ── Live 3D world position from PyBullet ──────────────────────
+            # Do NOT use the depth map for Z — it gives eye-space camera
+            # distance, not world Z. PyBullet knows the exact world position.
+            try:
+                pos, _ = p.getBasePositionAndOrientation(
+                    entry.body_id,
+                    physicsClientId=self._physics_client,
+                )
+                x = round(float(pos[0]), 4)
+                y = round(float(pos[1]), 4)
+                z = round(float(pos[2]), 4)
+            except Exception as e:
+                logger.warning(
+                    f"[colour] Could not get PyBullet position for "
+                    f"'{entry.label}': {e}. Using registry position."
+                )
+                x = float(entry.position[0])
+                y = float(entry.position[1])
+                z = float(entry.position[2])
+
             confidence = round(min(area / self._expected_area, 1.0), 3)
 
             detections.append(Detection(
                 body_id=entry.body_id,
                 label=entry.label,
-                position_3d=(round(x, 4), round(y, 4), round(float(z), 4)),
+                position_3d=(x, y, z),
                 bounding_box_2d=bbox,
                 confidence=confidence,
                 source=self.name,
@@ -195,7 +217,7 @@ class ColourDetector(DetectorBase):
             logger.debug(
                 f"[colour] '{entry.label}'  colour='{colour_name}'  "
                 f"area={area:.0f}  conf={confidence:.2f}  "
-                f"centroid=({cx},{cy})  z={z:.3f}m"
+                f"pos=({x:.3f}, {y:.3f}, {z:.3f})"
             )
 
         logger.info(
@@ -243,7 +265,7 @@ class ColourDetector(DetectorBase):
         Build a binary mask for the given colour name by OR-combining
         all HSV ranges registered for that colour.
 
-        Red needs two ranges because H wraps at 0/180 in OpenCV HSV.
+        Red wraps around H=0/180, so it has two ranges merged here.
         A morphological open removes isolated noise specks.
         """
         mask = np.zeros(hsv.shape[:2], dtype=np.uint8)
