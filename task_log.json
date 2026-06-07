@@ -81,5 +81,88 @@
       }
     },
     "completed_at": "2026-06-06T20:02:31.694975+00:00"
+  },
+  {
+    "task_id": "4ecff7f6",
+    "instruction": "pick up the red block and place it in the blue tray",
+    "model": "openai",
+    "created_at": "2026-06-07T09:35:40.314660+00:00",
+    "status": "completed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-06-07T09:35:42.782220+00:00",
+        "latency_ms": 2467.3,
+        "payload": {
+          "action": "pick",
+          "object_target": "red block",
+          "destination": "blue tray",
+          "spatial_relation": "in",
+          "confidence": "high",
+          "raw_instruction": "pick up the red block and place it in the blue tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "success",
+        "timestamp": "2026-06-07T09:35:42.782725+00:00",
+        "latency_ms": 0.4,
+        "payload": {
+          "object_count": 3,
+          "objects": [
+            "red block",
+            "blue tray",
+            "green block"
+          ],
+          "source": "JSON file"
+        },
+        "error": null
+      },
+      "task_plan": {
+        "stage": "task_plan",
+        "status": "success",
+        "timestamp": "2026-06-07T09:35:42.782948+00:00",
+        "latency_ms": 0.2,
+        "payload": {
+          "steps": 5,
+          "commands": [
+            "locate",
+            "move",
+            "pick",
+            "move",
+            "place"
+          ]
+        },
+        "error": null
+      },
+      "execution": {
+        "stage": "execution",
+        "status": "success",
+        "timestamp": "2026-06-07T09:35:42.783241+00:00",
+        "latency_ms": 0.0,
+        "payload": {
+          "step": 5,
+          "command": "place",
+          "result": "Placed 'red block' at 'blue tray' (350.0, 235.0)"
+        },
+        "error": null
+      },
+      "feedback": {
+        "stage": "feedback",
+        "status": "success",
+        "timestamp": "2026-06-07T09:35:42.783266+00:00",
+        "latency_ms": null,
+        "payload": {
+          "steps_completed": 5,
+          "total_steps": 5,
+          "latency_ms": 0.16154200420714915
+        },
+        "error": null
+      }
+    },
+    "completed_at": "2026-06-07T09:35:42.783277+00:00"
   }
 ]
