@@ -33,6 +33,7 @@ import time
 import logging
 from dataclasses import dataclass, field
 from typing import Optional
+from llm_backend.LLM_eval.test_cases import TEST_CASES
 
 logger = logging.getLogger(__name__)
 
@@ -242,7 +243,7 @@ def run_baseline_evaluation(verbose: bool = True) -> list[dict]:
     import os
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-    from test_cases import TEST_CASES
+    from llm_backend.LLM_eval.test_cases import TEST_CASES
 
     parser  = BaselineParser()
     results = []

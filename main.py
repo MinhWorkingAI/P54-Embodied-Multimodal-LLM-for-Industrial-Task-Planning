@@ -52,7 +52,6 @@ from vision_backend.scene_representation import get_current_scene
 from simulation_backend.mock_robot import MockRobot
 from simulation_backend.executor   import Executor
 from simulation_backend.action_schema import plan_to_commands
-
 logging.basicConfig(
     level=logging.WARNING,
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s"
@@ -196,17 +195,7 @@ def run_pipeline(
                 "No objects detected in the current scene. "
                 "Check the vision scene file or simulation before planning."
             )
-            tracker.record(
-                task_id, "vision_lookup", status="failed",
-                payload={"object_count": 0, "objects": []},
-                error=message,
-                latency_ms=lat,
-            )
-            tracker.complete_task(task_id, success=False)
-            tracker.save()
-            if verbose:
-                print(f"       ✗ Vision lookup failed: {message}")
-            return result
+            print(f"       ⚠ {message}")
 
         tracker.record(
             task_id, "vision_lookup", status="success",
@@ -217,6 +206,7 @@ def run_pipeline(
             },
             latency_ms=lat,
         )
+        
         if verbose:
             print(f"       Objects in scene: {[o.get('label') for o in objects]}")
             print(f"       Latency         : {lat:.0f}ms")
