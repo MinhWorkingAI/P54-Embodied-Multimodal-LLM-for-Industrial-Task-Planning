@@ -209,6 +209,26 @@ class Simulation:
     def client(self) -> int:
         return self._client
 
+    @property
+    def camera(self):
+        return self._camera
+
+    @property
+    def detector(self):
+        return self._detector
+
+    @property
+    def builder(self):
+        return self._builder
+
+    @property
+    def ground_truth(self):
+        return self._ground_truth
+
+    @property
+    def robot(self):
+        return self._robot
+
     # ── Setup ──────────────────────────────────────────────────────────────────
 
     def _connect(self, mode: str = None) -> int:
@@ -231,6 +251,12 @@ class Simulation:
         )
 
         p.setAdditionalSearchPath(pybullet_data.getDataPath(), physicsClientId=client)
+
+        # Disable PyBullet's internal real-time stepping so all physics
+        # is driven exclusively by explicit p.stepSimulation() calls.
+        # This gives the robot controller full control over timing.
+        p.setRealTimeSimulation(0, physicsClientId=client)
+
         logger.info(f"PyBullet connected — mode={resolved_mode} client={client}")
         return client
 
@@ -242,8 +268,6 @@ class Simulation:
         from simulation_backend.vision.ground_truth                    import GroundTruth
         from simulation_backend.vision.camera                          import Camera
         from simulation_backend.vision.detection_base                  import get_detector
-        from simulation_backend.mock_robot                             import MockRobot
-
         ws_cfg  = self._cfg.get("workspace", {})
         obj_cfg = self._cfg.get("objects",   [])
         cam_cfg = self._cfg.get("camera",    {})
@@ -262,14 +286,80 @@ class Simulation:
         self._ground_truth = GroundTruth(self._client, self._registry)
         self._builder      = SceneBuilder(self._registry)
 
-        self._detector = get_detector(registry=self._registry, config=self._cfg)
+        # Inject physics_client into config so detectors that need live
+        # PyBullet positions (colour_detector) can call p.getBasePositionAndOrientation
+        detector_cfg = dict(self._cfg)
+        detector_cfg["_physics_client"] = self._client
+        self._detector = get_detector(registry=self._registry, config=detector_cfg)
         if self._detector:
             logger.info(f"Primary detector active: {self._detector}")
         else:
             logger.info("No primary detector — using ground truth only.")
 
-        self._robot = MockRobot()
-        logger.info("Robot: MockRobot (Phase 1/2 — no real arm).")
+        self._robot = self._load_robot(self._registry)
+
+    def _load_robot(self, registry):
+        """
+        Instantiate the robot controller selected by ROBOT_MODEL in .env.
+
+        Options:
+            mock   -> MockRobot (default, no URDF, no physics arm)
+            franka -> FrankaPanda (loads panda.urdf from pybullet_data)
+            kuka   -> KukaIIWA [future]
+            ur5    -> UniversalRobotUR5 [future]
+
+        Returns:
+            Robot instance (MockRobot or RobotBase subclass).
+        """
+        from simulation_backend.mock_robot import MockRobot
+
+        robot_model = os.getenv("ROBOT_MODEL", "mock").strip().lower()
+
+        if robot_model == "franka":
+            try:
+                import pybullet_data
+                from simulation_backend.robots.Franka_panda import FrankaPanda
+
+                urdf_path = os.path.join(
+                    pybullet_data.getDataPath(),
+                    "franka_panda", "panda.urdf",
+                )
+                body_id = p.loadURDF(
+                    urdf_path,
+                    basePosition    = [0.0, 0.0, 0.0],
+                    useFixedBase    = True,
+                    physicsClientId = self._client,
+                )
+                robot = FrankaPanda(
+                    physics_client = self._client,
+                    body_id        = body_id,
+                    registry       = registry,
+                )
+                robot.reset()
+                logger.info(
+                    f"Robot: FrankaPanda loaded "
+                    f"(body_id={body_id}, base=[0.0, 0.0, 0.0])."
+                )
+                return robot
+
+            except Exception as e:
+                logger.error(
+                    f"Failed to load FrankaPanda: {e}. "
+                    f"Falling back to MockRobot."
+                )
+                return MockRobot()
+
+        elif robot_model in ("kuka", "ur5"):
+            logger.warning(
+                f"ROBOT_MODEL={robot_model} is not yet implemented. "
+                f"Falling back to MockRobot."
+            )
+            return MockRobot()
+
+        else:
+            robot = MockRobot()
+            logger.info("Robot: MockRobot (ROBOT_MODEL=mock or unset).")
+            return robot
 
     @staticmethod
     def _load_config(config_path: str = None) -> dict:

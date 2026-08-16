@@ -211,6 +211,10 @@ def run_pipeline(
             print(f"       Objects in scene: {[o.get('label') for o in objects]}")
             print(f"       Latency         : {lat:.0f}ms")
 
+        # Show detection bounding boxes — GUI + live simulation mode only
+        if _USE_LIVE and sim is not None and os.getenv("SIMULATION_MODE", "DIRECT").upper() == "GUI":
+            _show_detection_window(sim)
+
     except FileNotFoundError as e:
         message = f"Scene file missing: {e}"
         tracker.record(task_id, "vision_lookup", status="failed", error=message)
@@ -312,6 +316,152 @@ def run_pipeline(
 
 # ── Interactive mode ───────────────────────────────────────────────────────────
 
+
+
+
+def _show_detection_window(sim) -> None:
+    """
+    Capture one camera frame and display it with detection bounding boxes.
+
+    Called at the end of Stage 2 (Vision Lookup) when:
+        - USE_LIVE_SIMULATION=true
+        - SIMULATION_MODE=GUI
+
+    What is shown:
+        - Bounding boxes from the active primary detector (colour / YOLO)
+          drawn by detector.draw_detections() — each detector uses its own
+          colour scheme (cyan for colour, yellow for YOLO)
+        - Ground truth labels for every registered object derived from the
+          PyBullet segmentation mask — white dot + "label (x, y, z)"
+        - A bottom info bar showing detector name and object count
+
+    Behaviour:
+        - Opens an 800x600 OpenCV window
+        - Blocks until any key is pressed
+        - Closes the window and returns — pipeline continues to Stage 3
+
+    Args:
+        sim : Simulation instance (provides camera, detector, registry)
+    """
+    import cv2
+    import numpy as np
+    import pybullet as p
+
+    WINDOW = "Stage 2 — Detection  (press any key to continue)"
+
+    try:
+        camera   = sim.camera
+        detector = sim.detector
+        registry = sim.registry
+
+        # ── Capture one frame ─────────────────────────────────────────────
+        frame   = camera.capture()
+        display = frame.bgr.copy()
+
+        # ── Primary detector bounding boxes ───────────────────────────────
+        detections = []
+        if detector is not None:
+            try:
+                detections = detector.detect(frame)
+                display    = detector.draw_detections(display, detections)
+            except Exception as e:
+                logger.debug(f"[detection window] Detector error: {e}")
+
+        # ── Ground truth labels from segmentation mask ────────────────────
+        for entry in registry.all_entries():
+            mask = (frame.seg == entry.body_id)
+            if not mask.any():
+                continue
+            ys, xs = np.where(mask)
+            cx, cy = int(xs.mean()), int(ys.mean())
+            try:
+                pos, _ = p.getBasePositionAndOrientation(
+                    entry.body_id, physicsClientId=sim.client
+                )
+                lbl = f"{entry.label} ({pos[0]:.2f}, {pos[1]:.2f}, {pos[2]:.2f})"
+            except Exception:
+                lbl = entry.label
+            cv2.circle(display, (cx, cy), 3, (200, 200, 200), -1)
+            cv2.putText(
+                display, lbl, (cx + 5, cy + 4),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.36,
+                (220, 220, 220), 1, cv2.LINE_AA,
+            )
+
+        # ── Bottom info bar ───────────────────────────────────────────────
+        h, w      = display.shape[:2]
+        bar_h     = 40
+        overlay   = display.copy()
+        cv2.rectangle(overlay, (0, h - bar_h), (w, h), (15, 15, 15), -1)
+        cv2.addWeighted(overlay, 0.8, display, 0.2, 0, display)
+
+        det_name  = detector.name if detector else "ground_truth"
+        det_count = len(detections)
+        cv2.putText(
+            display,
+            f"Detector: {det_name}   Objects detected: {det_count}   "
+            f"Press any key to continue...",
+            (10, h - bar_h + 26),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.46,
+            (0, 210, 255), 1, cv2.LINE_AA,
+        )
+
+        # ── Show and wait ─────────────────────────────────────────────────
+        cv2.namedWindow(WINDOW, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(WINDOW, 800, 600)
+        cv2.imshow(WINDOW, display)
+        cv2.waitKey(0)
+        cv2.destroyWindow(WINDOW)
+
+    except Exception as e:
+        logger.warning(f"[detection window] Could not display: {e}")
+
+
+def _hold_simulation_open(sim) -> None:
+    """
+    Keep the PyBullet GUI window open after the pipeline completes.
+
+    Steps physics at real-time rate so gravity / settling stays active
+    in the 3D window. Exits when the user types Q + Enter in the terminal.
+    No OpenCV window — the PyBullet 3D view is the only display.
+    """
+    import pybullet as p
+    import time as _time
+    import threading
+
+    print(f"\n{'═'*60}")
+    print(f"  Pipeline complete — PyBullet window open.")
+    print(f"  Type Q + Enter in this terminal to quit.")
+    print(f"{'═'*60}\n")
+
+    quit_flag = threading.Event()
+
+    def _wait_for_q():
+        while not quit_flag.is_set():
+            try:
+                line = input().strip().lower()
+                if line in ("q", "quit", "exit", ""):
+                    quit_flag.set()
+            except EOFError:
+                quit_flag.set()
+                break
+
+    listener = threading.Thread(target=_wait_for_q, daemon=True)
+    listener.start()
+
+    try:
+        while not quit_flag.is_set():
+            p.stepSimulation(physicsClientId=sim.client)
+            _time.sleep(1.0 / 240.0)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print("  Closing simulation.")
+
+
+
+
+
 def run_interactive(sim=None) -> None:
     tracker  = PipelineTracker()
     _backend = os.getenv("LLM_BACKEND", "openai")
@@ -384,6 +534,10 @@ if __name__ == "__main__":
             run_interactive(sim=sim)
         elif args.instruction:
             run_pipeline(args.instruction, verbose=not args.quiet, sim=sim)
+            # After single-instruction pipeline, keep PyBullet open in GUI mode
+            # so the user can inspect the result. Exit only when Q is pressed.
+            if sim is not None and os.getenv("SIMULATION_MODE", "DIRECT").upper() == "GUI":
+                _hold_simulation_open(sim)
         else:
             ap.print_help()
     finally:

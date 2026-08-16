@@ -1,104 +1,90 @@
-from __future__ import annotations
+"""
+vision_backend/scene_representation.py
+---------------------------------------
+JSON-based scene provider for the pipeline's Vision Lookup stage.
 
-import json
-import os
-from pathlib import Path
-from typing import Any
+Reads a static scene JSON file from disk and converts it into the
+planner-compatible scene dict that main.py and task_planner/planner.py expect.
 
+Public interface:
+    get_current_scene() -> dict
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_SCENE_REPRESENTATION = PROJECT_ROOT / "drafts" / "scene_representation.json"
-DEFAULT_VISION_OUTPUT = PROJECT_ROOT / "drafts" / "scene_output.json"
+Input:
+    JSON file at vision_backend/scene_representation.json (default)
+    or path set via VISION_SCENE_FILE environment variable.
 
-
-def _resolve_scene_file(filename: str | os.PathLike[str]) -> Path:
-    path = Path(filename)
-    if path.is_absolute():
-        return path
-
-    candidates = [
-        Path.cwd() / path,
-        PROJECT_ROOT / path,
-        PROJECT_ROOT / "drafts" / path,
-    ]
-    for candidate in candidates:
-        if candidate.exists():
-            return candidate
-
-    return PROJECT_ROOT / path
-
-
-def load_json(filename: str | os.PathLike[str]) -> dict[str, Any]:
-    with _resolve_scene_file(filename).open("r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def calculate_center(bounding_box: list[int | float]) -> list[float]:
-    x, y, width, height = bounding_box
-    return [float(x) + float(width) / 2, float(y) + float(height) / 2]
-
-
-def build_scene_representation(vision_output: dict[str, Any]) -> dict[str, Any]:
-    scene = {}
-
-    for obj in vision_output.get("objects", []):
-        label = obj["label"]
-        bounding_box = obj["bounding_box"]
-        scene[label] = {
-            "center": calculate_center(bounding_box),
-            "bounding_box": bounding_box,
-            "confidence": obj.get("confidence"),
+    Expected JSON format:
+        {
+            "objects": [
+                {"label": "red block", "position": [150.0, 110.0]},
+                ...
+            ]
         }
 
-    return {
-        "image_id": vision_output.get("image_id", "unknown"),
-        "scene": scene,
-    }
-
-
-def _scene_representation_to_planner_scene(scene_data: dict[str, Any]) -> dict[str, Any]:
-    planner_objects = []
-
-    for label, details in scene_data.get("scene", {}).items():
-        center = details.get("center", [0, 0])
-        planner_objects.append({
-            "label": label,
-            "position": [center[0], center[1]],
-        })
-
-    return {"objects": planner_objects}
-
-
-def get_planner_scene(filename: str | os.PathLike[str] | None = None) -> dict[str, Any]:
-    scene_file = filename or os.getenv("VISION_SCENE_FILE")
-
-    if scene_file:
-        scene_data = load_json(scene_file)
-    elif DEFAULT_SCENE_REPRESENTATION.exists():
-        scene_data = load_json(DEFAULT_SCENE_REPRESENTATION)
-    elif DEFAULT_VISION_OUTPUT.exists():
-        scene_data = build_scene_representation(load_json(DEFAULT_VISION_OUTPUT))
-    else:
-        raise FileNotFoundError(
-            "No vision scene file found. Set VISION_SCENE_FILE or provide "
-            "drafts/scene_representation.json."
-        )
-
-    if "scene" not in scene_data and "objects" in scene_data:
-        scene_data = build_scene_representation(scene_data)
-
-    return _scene_representation_to_planner_scene(scene_data)
-
-
-def get_current_scene(filename: str | os.PathLike[str] | None = None) -> dict[str, Any]:
-    """
-    Return the latest vision scene in the planner-compatible format.
-
-    Planner format:
+Output:
     {
         "objects": [
-            {"label": "red block", "position": [x, y]}
+            {"label": "red block", "position": [150.0, 110.0]},
+            ...
         ]
     }
+
+Usage:
+    from vision_backend.scene_representation import get_current_scene
+    scene = get_current_scene()
+"""
+
+import json
+import logging
+import os
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
+_DEFAULT_SCENE_FILE = Path(__file__).resolve().parent / "scene_representation.json"
+
+
+def get_current_scene() -> dict:
     """
-    return get_planner_scene(filename)
+    Read the static scene JSON file and return a planner-compatible scene dict.
+
+    Returns:
+        {"objects": [{"label": str, "position": [x, y]}, ...]}
+
+    Raises:
+        FileNotFoundError : Scene file does not exist.
+        ValueError        : File is not valid JSON or missing "objects" key.
+    """
+    scene_file = Path(os.getenv("VISION_SCENE_FILE", str(_DEFAULT_SCENE_FILE)))
+
+    if not scene_file.exists():
+        raise FileNotFoundError(
+            f"Scene file not found: {scene_file}. "
+            f"Set VISION_SCENE_FILE in .env or ensure vision_backend/scene_representation.json exists."
+        )
+
+    try:
+        with open(scene_file, encoding="utf-8") as f:
+            raw = json.load(f)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Scene file is not valid JSON: {scene_file} — {e}") from e
+
+    if "objects" not in raw:
+        raise ValueError(f"Scene file missing required 'objects' key: {scene_file}")
+
+    scene = _convert(raw)
+    logger.info(f"[scene_representation] Loaded {len(scene['objects'])} objects from {scene_file}")
+    return scene
+
+
+def _convert(raw: dict) -> dict:
+    """
+    Normalise raw JSON into planner-compatible scene format.
+    Strips Z if position has 3 elements.
+    """
+    objects = []
+    for obj in raw["objects"]:
+        label = obj["label"]
+        position = list(obj["position"])[:2]
+        objects.append({"label": label, "position": position})
+    return {"objects": objects}
