@@ -10,12 +10,6 @@ Supported models (configured via .env):
     OPENAI_API_KEY   + OPENAI_MODEL    -> GPT-4o (default: gpt-4o)
     GEMINI_API_KEY   + GEMINI_MODEL    -> Gemini (default: gemini-1.5-pro)
     DEEPSEEK_API_KEY + DEEPSEEK_MODEL  -> DeepSeek (default: deepseek-chat)
-
-Usage:
-    from llm_backend.llm_eval.model_registry import get_chain, get_available_models
-    chain = get_chain("openai")
-    chain = get_chain("gemini")
-    chain = get_chain("deepseek")
 """
 
 import os
@@ -30,8 +24,15 @@ from langchain_core.prompts import (
 )
 from langchain_core.output_parsers import PydanticOutputParser
 
-from ..schema import ParsedInstruction       # up to llm_backend
-from ..prompts import build_system_prompt    # up to llm_backend
+try:
+    from llm_backend.schema import ParsedInstruction
+except ImportError:
+    from llm_backend.schema import ParsedInstruction
+# from llm_backend.prompts import build_system_prompt    # up to llm_backend
+try:
+    from llm_backend.prompts import build_system_prompt    # up to llm_backend
+except ImportError:
+    from llm_backend.prompts import build_system_prompt
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -68,15 +69,15 @@ _prompt_template = ChatPromptTemplate.from_messages([
 #      are only imported when that backend is actually requested.
 
 def _build_openai():
-    from ..backends.openai_backend import build_llm
+    from llm_backend.backends.openai_backend import build_llm
     return build_llm()
 
 def _build_gemini():
-    from ..backends.gemini_backend import build_llm
+    from llm_backend.backends.gemini_backend import build_llm
     return build_llm()
 
 def _build_deepseek():
-    from ..backends.deepseek_backend import build_llm
+    from llm_backend.backends.deepseek_backend import build_llm
     return build_llm()
 
 _BUILDERS = {

@@ -26,9 +26,9 @@ from dataclasses import dataclass, field as dc_field
 
 from langchain_core.exceptions import OutputParserException
 
-from ..schema import ParsedInstruction                      # up to llm_backend
+from llm_backend.schema import ParsedInstruction                      # up to llm_backend
 from .test_cases import TEST_CASES, TestCase, get_cases_by_category  # same folder
-from ..edge_cases import (                                  # up to llm_backend
+from llm_backend.edge_cases import (                                  # up to llm_backend
     is_empty_instruction,
     is_too_vague,
     normalise_instruction,

@@ -164,5 +164,271 @@
       }
     },
     "completed_at": "2026-06-07T09:35:42.783277+00:00"
+  },
+  {
+    "task_id": "b9073da4",
+    "instruction": "place the red block to the left of the green block",
+    "model": "openai",
+    "created_at": "2026-06-07T09:48:40.455825+00:00",
+    "status": "completed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-06-07T09:48:41.673710+00:00",
+        "latency_ms": 1217.6,
+        "payload": {
+          "action": "place",
+          "object_target": "red block",
+          "destination": "green block",
+          "spatial_relation": "left of",
+          "confidence": "high",
+          "raw_instruction": "place the red block to the left of the green block",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "success",
+        "timestamp": "2026-06-07T09:48:41.674266+00:00",
+        "latency_ms": 0.5,
+        "payload": {
+          "object_count": 3,
+          "objects": [
+            "red block",
+            "blue tray",
+            "green block"
+          ],
+          "source": "JSON file"
+        },
+        "error": null
+      },
+      "task_plan": {
+        "stage": "task_plan",
+        "status": "success",
+        "timestamp": "2026-06-07T09:48:41.674492+00:00",
+        "latency_ms": 0.2,
+        "payload": {
+          "steps": 5,
+          "commands": [
+            "locate",
+            "move",
+            "pick",
+            "move",
+            "place"
+          ]
+        },
+        "error": null
+      },
+      "execution": {
+        "stage": "execution",
+        "status": "success",
+        "timestamp": "2026-06-07T09:48:41.674797+00:00",
+        "latency_ms": 0.0,
+        "payload": {
+          "step": 5,
+          "command": "place",
+          "result": "Placed 'red block' at 'green block' (247.0, 127.0)"
+        },
+        "error": null
+      },
+      "feedback": {
+        "stage": "feedback",
+        "status": "success",
+        "timestamp": "2026-06-07T09:48:41.674823+00:00",
+        "latency_ms": null,
+        "payload": {
+          "steps_completed": 5,
+          "total_steps": 5,
+          "latency_ms": 0.14562500291503966
+        },
+        "error": null
+      }
+    },
+    "completed_at": "2026-06-07T09:48:41.674836+00:00"
+  },
+  {
+    "task_id": "15c8d6b9",
+    "instruction": "pick up the red block and place it in the left tray",
+    "model": "openai",
+    "created_at": "2026-06-07T10:29:40.174204+00:00",
+    "status": "failed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-06-07T10:29:41.819588+00:00",
+        "latency_ms": 1644.1,
+        "payload": {
+          "action": "pick",
+          "object_target": "red block",
+          "destination": "left tray",
+          "spatial_relation": "in",
+          "confidence": "high",
+          "raw_instruction": "pick up the red block and place it in the left tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "success",
+        "timestamp": "2026-06-07T10:29:41.820693+00:00",
+        "latency_ms": 1.0,
+        "payload": {
+          "object_count": 3,
+          "objects": [
+            "red block",
+            "blue tray",
+            "green block"
+          ],
+          "source": "JSON file"
+        },
+        "error": null
+      },
+      "task_plan": {
+        "stage": "task_plan",
+        "status": "failed",
+        "timestamp": "2026-06-07T10:29:41.820894+00:00",
+        "latency_ms": null,
+        "payload": null,
+        "error": "Destination 'left tray' not found in scene. Available: ['red block', 'blue tray', 'green block']"
+      }
+    },
+    "completed_at": "2026-06-07T10:29:41.820906+00:00"
+  },
+  {
+    "task_id": "d4edbfdc",
+    "instruction": "place the red block to the right of the workstation",
+    "model": "openai",
+    "created_at": "2026-06-07T10:29:57.551489+00:00",
+    "status": "failed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-06-07T10:29:58.566464+00:00",
+        "latency_ms": 1014.8,
+        "payload": {
+          "action": "place",
+          "object_target": "red block",
+          "destination": "workstation",
+          "spatial_relation": "right of",
+          "confidence": "high",
+          "raw_instruction": "place the red block to the right of the workstation",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "success",
+        "timestamp": "2026-06-07T10:29:58.567206+00:00",
+        "latency_ms": 0.7,
+        "payload": {
+          "object_count": 3,
+          "objects": [
+            "red block",
+            "blue tray",
+            "green block"
+          ],
+          "source": "JSON file"
+        },
+        "error": null
+      },
+      "task_plan": {
+        "stage": "task_plan",
+        "status": "failed",
+        "timestamp": "2026-06-07T10:29:58.567379+00:00",
+        "latency_ms": null,
+        "payload": null,
+        "error": "Destination 'workstation' not found in scene. Available: ['red block', 'blue tray', 'green block']"
+      }
+    },
+    "completed_at": "2026-06-07T10:29:58.567390+00:00"
+  },
+  {
+    "task_id": "e6e6293b",
+    "instruction": "grab the red block and put it in the blue tray",
+    "model": "openai",
+    "created_at": "2026-06-07T10:30:42.069440+00:00",
+    "status": "completed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-06-07T10:30:43.498077+00:00",
+        "latency_ms": 1428.5,
+        "payload": {
+          "action": "pick",
+          "object_target": "red block",
+          "destination": "blue tray",
+          "spatial_relation": "in",
+          "confidence": "high",
+          "raw_instruction": "grab the red block and put it in the blue tray",
+          "notes": "Mapped 'grab' to 'pick' and 'put' to 'place' as closest valid actions."
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "success",
+        "timestamp": "2026-06-07T10:30:43.499659+00:00",
+        "latency_ms": 1.5,
+        "payload": {
+          "object_count": 3,
+          "objects": [
+            "red block",
+            "blue tray",
+            "green block"
+          ],
+          "source": "JSON file"
+        },
+        "error": null
+      },
+      "task_plan": {
+        "stage": "task_plan",
+        "status": "success",
+        "timestamp": "2026-06-07T10:30:43.499978+00:00",
+        "latency_ms": 0.2,
+        "payload": {
+          "steps": 5,
+          "commands": [
+            "locate",
+            "move",
+            "pick",
+            "move",
+            "place"
+          ]
+        },
+        "error": null
+      },
+      "execution": {
+        "stage": "execution",
+        "status": "success",
+        "timestamp": "2026-06-07T10:30:43.500420+00:00",
+        "latency_ms": 0.0,
+        "payload": {
+          "step": 5,
+          "command": "place",
+          "result": "Placed 'red block' at 'blue tray' (350.0, 235.0)"
+        },
+        "error": null
+      },
+      "feedback": {
+        "stage": "feedback",
+        "status": "success",
+        "timestamp": "2026-06-07T10:30:43.500456+00:00",
+        "latency_ms": null,
+        "payload": {
+          "steps_completed": 5,
+          "total_steps": 5,
+          "latency_ms": 0.20329200197011232
+        },
+        "error": null
+      }
+    },
+    "completed_at": "2026-06-07T10:30:43.500469+00:00"
   }
 ]

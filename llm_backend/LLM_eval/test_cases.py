@@ -295,6 +295,112 @@ TEST_CASES: list[TestCase] = [
         expected_confidence="high",
         description="Named workstation destination",
     ),
+
+    TestCase(
+        id="S06",
+        instruction="transfer the component to assembly station A",
+        category="synonym",
+        expected_action="move",
+        expected_object="component",
+        expected_destination="assembly station A",
+        expected_spatial=None,
+        expected_confidence="high",
+    ),
+
+    TestCase(
+        id="S07",
+        instruction="Fetch the Blue block",
+        category="synonym",
+        expected_action="move",
+        expected_object="component",
+        expected_destination="assembly station A",
+        expected_spatial=None,
+        expected_confidence="high",
+    ),
+
+    TestCase(
+        id="SP06",
+        instruction="place the red block directly behind the workstation",
+        category="spatial",
+        expected_action="move",
+        expected_object="component",
+        expected_destination="assembly station A",
+        expected_spatial=None,
+        expected_confidence="high",
+    ),
+    TestCase(
+        id="SP07",
+        instruction="move the yellow block above the blue block",
+        category="spatial",
+        expected_action="move",
+        expected_object="component",
+        expected_destination="assembly station A",
+        expected_spatial=None,
+        expected_confidence="high",
+    ),
+    TestCase(
+        id="MS04",
+        instruction="pick up the red block then find the green block",
+        category="multi_step",
+        expected_action="move",
+        expected_object="component",
+        expected_destination="assembly station A",
+        expected_spatial=None,
+        expected_confidence="high",
+    ),
+    TestCase(
+        id="SY06",
+        instruction="grab and deliver the green block to the right tray",
+        category="synonym",
+        expected_action="move",
+        expected_object="component",
+        expected_destination="assembly station A",
+        expected_spatial=None,
+        expected_confidence="high",
+    ),
+    TestCase(
+        id="EC05",
+        instruction="pick up the red block",
+        category="edge_case",
+        expected_action="pick",
+        expected_object="red block",
+        expected_confidence="high",
+        expected_spatial=None,
+    ),
+    TestCase(
+        id="EC06",
+        instruction="LOCATE THE YELLOW BLOCK AND MOVE IT TO THE LEFT TRAY",
+        category="edge_case",
+        expected_action="pick",
+        expected_object="yellow block",
+        expected_confidence="high",
+        expected_spatial=None,
+    ),
+    TestCase(
+        id="AM04",
+        instruction="move the object",
+        category="ambiguous",
+        expected_action="pick",
+        expected_object="yellow block",
+        expected_confidence="high",
+        expected_spatial=None,
+
+    ),
+    TestCase(
+        id="AM05",
+        instruction="put it somewhere safe",
+        category="ambiguous",
+        expected_action="pick",
+        expected_object="yellow block",
+        expected_confidence="high",
+        expected_spatial=None,
+
+    ),
+
+
+
+    
+
 ]
 
 
