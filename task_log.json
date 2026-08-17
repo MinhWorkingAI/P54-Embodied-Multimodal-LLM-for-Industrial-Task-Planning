@@ -81,5 +81,247 @@
       }
     },
     "completed_at": "2026-06-06T20:02:31.694975+00:00"
+  },
+  {
+    "task_id": "6e76a081",
+    "instruction": "pick up the red block and place it in the left tray",
+    "model": "openai",
+    "created_at": "2026-08-17T05:12:15.389094+00:00",
+    "status": "failed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-08-17T05:12:18.435010+00:00",
+        "latency_ms": 3045.5,
+        "payload": {
+          "action": "pick",
+          "object_target": "red block",
+          "destination": "left tray",
+          "spatial_relation": "in",
+          "confidence": "high",
+          "raw_instruction": "pick up the red block and place it in the left tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "failed",
+        "timestamp": "2026-08-17T05:12:18.436441+00:00",
+        "latency_ms": null,
+        "payload": null,
+        "error": "No module named 'pybullet'"
+      }
+    },
+    "completed_at": "2026-08-17T05:12:18.436461+00:00"
+  },
+  {
+    "task_id": "f1e14f74",
+    "instruction": "pick up the red block and place it in the left tray",
+    "model": "openai",
+    "created_at": "2026-08-17T05:14:10.394377+00:00",
+    "status": "completed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-08-17T05:14:13.902860+00:00",
+        "latency_ms": 3508.2,
+        "payload": {
+          "action": "pick",
+          "object_target": "red block",
+          "destination": "left tray",
+          "spatial_relation": "in",
+          "confidence": "high",
+          "raw_instruction": "pick up the red block and place it in the left tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "success",
+        "timestamp": "2026-08-17T05:14:49.499672+00:00",
+        "latency_ms": 35596.9,
+        "payload": {
+          "object_count": 7,
+          "objects": [
+            "red block",
+            "blue block",
+            "green block",
+            "yellow block",
+            "left tray",
+            "right tray",
+            "workstation"
+          ],
+          "source": "REAL"
+        },
+        "error": null
+      },
+      "task_plan": {
+        "stage": "task_plan",
+        "status": "success",
+        "timestamp": "2026-08-17T05:14:49.499825+00:00",
+        "latency_ms": 0.1,
+        "payload": {
+          "steps": 5,
+          "commands": [
+            "locate",
+            "move",
+            "pick",
+            "move",
+            "place"
+          ]
+        },
+        "error": null
+      },
+      "execution": {
+        "stage": "execution",
+        "status": "success",
+        "timestamp": "2026-08-17T05:14:49.500045+00:00",
+        "latency_ms": 0.0,
+        "payload": {
+          "step": 5,
+          "command": "place",
+          "result": "Placed 'red block' at 'left tray' (0.65, 0.45)"
+        },
+        "error": null
+      },
+      "feedback": {
+        "stage": "feedback",
+        "status": "success",
+        "timestamp": "2026-08-17T05:14:49.500069+00:00",
+        "latency_ms": null,
+        "payload": {
+          "steps_completed": 5,
+          "total_steps": 5,
+          "latency_ms": 0.09850000060396269
+        },
+        "error": null
+      }
+    },
+    "completed_at": "2026-08-17T05:14:49.500078+00:00"
+  },
+  {
+    "task_id": "5dab1131",
+    "instruction": "pick up the red block and place it in the left tray",
+    "model": "openai",
+    "created_at": "2026-08-17T05:18:44.419936+00:00",
+    "status": "failed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-08-17T05:18:47.612897+00:00",
+        "latency_ms": 3192.7,
+        "payload": {
+          "action": "pick",
+          "object_target": "red block",
+          "destination": "left tray",
+          "spatial_relation": "in",
+          "confidence": "high",
+          "raw_instruction": "pick up the red block and place it in the left tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "failed",
+        "timestamp": "2026-08-17T05:18:47.614635+00:00",
+        "latency_ms": null,
+        "payload": null,
+        "error": "No module named 'pybullet'"
+      }
+    },
+    "completed_at": "2026-08-17T05:18:47.614647+00:00"
+  },
+  {
+    "task_id": "eb5ab9c8",
+    "instruction": "pick up the red block and place it in the left tray",
+    "model": "openai",
+    "created_at": "2026-08-17T05:19:38.826085+00:00",
+    "status": "completed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-08-17T05:19:41.291997+00:00",
+        "latency_ms": 2465.5,
+        "payload": {
+          "action": "pick",
+          "object_target": "red block",
+          "destination": "left tray",
+          "spatial_relation": "in",
+          "confidence": "high",
+          "raw_instruction": "pick up the red block and place it in the left tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "success",
+        "timestamp": "2026-08-17T05:19:43.525094+00:00",
+        "latency_ms": 2233.0,
+        "payload": {
+          "object_count": 7,
+          "objects": [
+            "red block",
+            "blue block",
+            "green block",
+            "yellow block",
+            "left tray",
+            "right tray",
+            "workstation"
+          ],
+          "source": "REAL"
+        },
+        "error": null
+      },
+      "task_plan": {
+        "stage": "task_plan",
+        "status": "success",
+        "timestamp": "2026-08-17T05:19:43.525249+00:00",
+        "latency_ms": 0.1,
+        "payload": {
+          "steps": 5,
+          "commands": [
+            "locate",
+            "move",
+            "pick",
+            "move",
+            "place"
+          ]
+        },
+        "error": null
+      },
+      "execution": {
+        "stage": "execution",
+        "status": "success",
+        "timestamp": "2026-08-17T05:19:43.525463+00:00",
+        "latency_ms": 0.0,
+        "payload": {
+          "step": 5,
+          "command": "place",
+          "result": "Placed 'red block' at 'left tray' (0.65, 0.45)"
+        },
+        "error": null
+      },
+      "feedback": {
+        "stage": "feedback",
+        "status": "success",
+        "timestamp": "2026-08-17T05:19:43.525485+00:00",
+        "latency_ms": null,
+        "payload": {
+          "steps_completed": 5,
+          "total_steps": 5,
+          "latency_ms": 0.09787500312086195
+        },
+        "error": null
+      }
+    },
+    "completed_at": "2026-08-17T05:19:43.525491+00:00"
   }
 ]
