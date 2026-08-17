@@ -24,9 +24,9 @@ User instruction
 
 | Name | Student ID | Role |
 |---|---|---|
-| Minh Hoang Duong | 104487115 | Team Leader |
+| Minh Hoang Duong | 104487115 | Visualization |
 | Lakshit Bansal | 105028858 | Vision Module |
-| Ved Jay Makhijani | 104762184 | LLM Module / Pipeline |
+| Ved Jay Makhijani | 104762184 | Team Leader |
 | Dinith Thejana | 105231766 | Simulation Backend |
 | Kaveesha Dharmadasa | 105271678 | Documentation / Scene Representation |
 
