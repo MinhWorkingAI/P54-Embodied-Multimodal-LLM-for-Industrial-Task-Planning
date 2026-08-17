@@ -37,9 +37,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dotenv import load_dotenv
 load_dotenv()
 
-from test_cases import TEST_CASES, get_all_categories
+from llm_backend.LLM_eval.test_cases import TEST_CASES, get_all_categories
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from llm_backend.LLM_eval.baseline_parser import run_baseline_evaluation
-from model_registry import get_available_models, MODEL_DISPLAY_NAMES
+from llm_backend.LLM_eval.model_registry import get_available_models, MODEL_DISPLAY_NAMES
 
 SEP  = "═" * 70
 SEP2 = "─" * 70
@@ -58,8 +60,8 @@ def run_pipeline_evaluation(
     Returns results in same format as baseline_parser for direct comparison.
     """
     from task_planner.planner import TaskPlanner
-    from execution.mock_robot import MockRobot
-    from execution.executor   import Executor
+    from simulation_backend.mock_robot import MockRobot
+    from simulation_backend.executor   import Executor
 
     if models is None:
         models = get_available_models()
@@ -84,13 +86,13 @@ def run_pipeline_evaluation(
             print(f"  {SEP2}")
 
         try:
-            from model_registry import get_chain
+            from llm_backend.LLM_eval.model_registry import get_chain
             from langchain_core.output_parsers import PydanticOutputParser
-            from schema import ParsedInstruction
-            from edge_cases import (is_empty_instruction, is_too_vague,
+            from llm_backend.schema import ParsedInstruction
+            from llm_backend.edge_cases import (is_empty_instruction, is_too_vague,
                                     normalise_instruction, validate_parsed_result,
                                     make_vague_result)
-            from prompts import build_system_prompt
+            from llm_backend.prompts import build_system_prompt
             from langchain_core.prompts import ChatPromptTemplate
 
             output_parser = PydanticOutputParser(pydantic_object=ParsedInstruction)
@@ -130,7 +132,7 @@ def run_pipeline_evaluation(
             try:
                 # Stage 1: LLM parse
                 from langchain_core.exceptions import OutputParserException
-                from parser import parse_instruction
+                from llm_backend.custom_LLM_parser import parse_instruction
                 parsed = parse_instruction(case.instruction)
 
                 row["parse_success"]      = True
@@ -152,7 +154,7 @@ def run_pipeline_evaluation(
                 row["confidence_correct"] = parsed.confidence.value == case.expected_confidence
                 row["parsed"]             = parsed.model_dump(mode="json")
 
-                from schema import ConfidenceLevel
+                from llm_backend.schema import ConfidenceLevel
                 if parsed.confidence == ConfidenceLevel.LOW:
                     row["pipeline_success"] = True  # graceful low-confidence exit
                     row["fully_correct"]    = all([
@@ -191,7 +193,9 @@ def run_pipeline_evaluation(
 
             if verbose:
                 s = "✓" if row["fully_correct"] else ("✗" if row["parse_success"] else "!")
-                print(f"  [{case.id}] {case.instruction[:48]:<48} {s}  {row['latency_ms']:6.0f}ms")
+                instr   = case.instruction[:48].ljust(48)
+                latency = row["latency_ms"]
+                print(f"  [{case.id}] {instr} {s}  {latency:6.0f}ms")
 
     return all_results
 
