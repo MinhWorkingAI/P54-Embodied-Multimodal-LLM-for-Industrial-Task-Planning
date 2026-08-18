@@ -87,6 +87,19 @@ def _get_scene_and_robot(sim=None, verbose: bool = True):
     return scene, robot
 
 
+def _execution_timeout_for_robot(robot) -> float:
+    """
+    Return the per-command execution timeout for the active robot.
+
+    MockRobot commands are near-instant, but real KUKA PyBullet pick/place
+    sequences include multiple IK moves, physics stepping, and settling time.
+    Keep the safety timeout, with an environment override for final tuning.
+    """
+    if getattr(robot, "model_name", "") == "kuka_iiwa" or type(robot).__name__ == "KukaIIWA":
+        return float(os.getenv("KUKA_EXECUTION_TIMEOUT", "15.0"))
+    return float(os.getenv("EXECUTOR_TIMEOUT_SECONDS", "5.0"))
+
+
 # ── Pipeline ───────────────────────────────────────────────────────────────────
 
 def run_pipeline(
@@ -268,7 +281,12 @@ def run_pipeline(
 
     try:
         robot.load_scene(scene)
-        executor = Executor(robot, tracker=tracker, task_id=task_id)
+        executor = Executor(
+            robot,
+            tracker=tracker,
+            task_id=task_id,
+            timeout_seconds=_execution_timeout_for_robot(robot),
+        )
         exec_res = executor.execute(plan, verbose=verbose)
 
         result["execution"] = exec_res

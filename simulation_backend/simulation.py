@@ -305,7 +305,7 @@ class Simulation:
         Options:
             mock   -> MockRobot (default, no URDF, no physics arm)
             franka -> FrankaPanda (loads panda.urdf from pybullet_data)
-            kuka   -> KukaIIWA [future]
+            kuka   -> KukaIIWA (loads kuka_iiwa/model.urdf from pybullet_data)
             ur5    -> UniversalRobotUR5 [future]
 
         Returns:
@@ -349,7 +349,41 @@ class Simulation:
                 )
                 return MockRobot()
 
-        elif robot_model in ("kuka", "ur5"):
+        elif robot_model == "kuka":
+            try:
+                import pybullet_data
+                from simulation_backend.robots.Kuka_IIWA import KukaIIWA
+
+                urdf_path = os.path.join(
+                    pybullet_data.getDataPath(),
+                    "kuka_iiwa", "model.urdf",
+                )
+                body_id = p.loadURDF(
+                    urdf_path,
+                    basePosition=[0.0, 0.0, 0.0],
+                    useFixedBase=True,
+                    physicsClientId=self._client,
+                )
+                robot = KukaIIWA(
+                    physics_client=self._client,
+                    body_id=body_id,
+                    registry=registry,
+                )
+                robot.reset()
+                logger.info(
+                    f"Robot: KukaIIWA loaded "
+                    f"(body_id={body_id}, base=[0.0, 0.0, 0.0])."
+                )
+                return robot
+
+            except Exception as e:
+                logger.error(
+                    f"Failed to load KukaIIWA: {e}. "
+                    f"Falling back to MockRobot."
+                )
+                return MockRobot()
+
+        elif robot_model == "ur5":
             logger.warning(
                 f"ROBOT_MODEL={robot_model} is not yet implemented. "
                 f"Falling back to MockRobot."
