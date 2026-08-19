@@ -25,8 +25,8 @@ How detection works:
                      a. Reads frame.seg at the bbox centre pixel to get
                         the PyBullet body_id (no COCO class lookup needed).
                      b. Resolves body_id -> label via ObjectRegistry.
-                     c. Samples depth at bbox centre -> Z in metres.
-                     d. Uses registry cached (x, y) + depth Z as 3D position.
+                     c. Resolves the live registry pose for world coordinates.
+                     d. Uses registry cached (x, y, z) as the 3D position.
                      e. Returns Detection with YOLO's real confidence score.
 
     Why seg mask instead of class names?
@@ -158,8 +158,7 @@ class YOLODetector(DetectorBase):
             1. Centre pixel (cx, cy) of the box.
             2. frame.seg[cy, cx] -> PyBullet body_id at that pixel.
             3. registry.get_by_id(body_id) -> ObjectEntry (label + position).
-            4. _depth_at_bbox_centre() -> metric Z in metres.
-            5. Registry (x, y) + depth Z -> 3D world position.
+            4. Registry position -> 3D world position.
             6. Deduplicate by body_id, keeping highest confidence per object.
 
         Returns:
@@ -209,9 +208,9 @@ class YOLODetector(DetectorBase):
                 logger.debug(f"[yolo] body_id={body_id} not in registry, skipping.")
                 continue
 
-            z = self._depth_at_bbox_centre(frame, bbox)
             x = float(entry.position[0])
             y = float(entry.position[1])
+            z = float(entry.position[2])
 
             if body_id in detections and confidence <= detections[body_id].confidence:
                 continue
@@ -227,7 +226,8 @@ class YOLODetector(DetectorBase):
 
             logger.debug(
                 f"[yolo] '{entry.label}'  body_id={body_id}  "
-                f"conf={confidence:.2f}  bbox=({x1},{y1},{x2},{y2})  z={z:.3f}m"
+                f"conf={confidence:.2f}  bbox=({x1},{y1},{x2},{y2})  "
+                f"world=({x:.3f},{y:.3f},{z:.3f})"
             )
 
         found = list(detections.values())
