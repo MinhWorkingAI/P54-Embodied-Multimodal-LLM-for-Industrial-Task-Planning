@@ -24,11 +24,11 @@ User instruction
 
 | Name | Student ID | Role |
 |---|---|---|
-| Minh Hoang Duong | 104487115 | Visualization |
-| Lakshit Bansal | 105028858 | Vision Module |
+| Minh Hoang Duong | 104487115 | Team Member (Visualization) |
+| Lakshit Bansal | 105028858 | Team Member (Vision Module) |
 | Ved Jay Makhijani | 104762184 | Team Leader |
-| Dinith Thejana | 105231766 | Simulation Backend |
-| Kaveesha Dharmadasa | 105271678 | Documentation / Scene Representation |
+| Dinith Thejana | 105231766 | Team Member (Simulation Backend) |
+| Kaveesha Dharmadasa | 105271678 | Team Member (Documentation / Scene Representation) |
 
 **Supervisors:** Prof. Prem Prakash Jayaraman · Prof. Boris Eisenbart · Muhammad Saeed  
 **Industry Partner:** ARENA2036 / University of Stuttgart
