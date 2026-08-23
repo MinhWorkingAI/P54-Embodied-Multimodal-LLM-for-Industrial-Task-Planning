@@ -211,7 +211,6 @@ __marimo__/
 .DS_Store
 *.DS_Store
 capstone/
-.DS_Store
-*.DS_Store
+
 
 CLAUDE.md
