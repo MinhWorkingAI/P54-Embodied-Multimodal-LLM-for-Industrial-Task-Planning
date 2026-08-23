@@ -53,7 +53,7 @@ JITTER = {
 
 
 def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[1]
+    return Path(__file__).resolve().parents[2]
 
 
 ROOT = _repo_root()
@@ -65,7 +65,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--output",
-        default="simulation_backend/vision/datasets/p54_workspace",
+        default="fine_tuning/yolov8n_p54_finetuning/datasets/p54_workspace",
         help="Dataset directory to create.",
     )
     parser.add_argument("--train", type=int, default=240)
@@ -194,8 +194,9 @@ def _apply_scene(sim, rng: random.Random, sample_idx: int) -> None:
 
 
 def _write_yaml(dataset_dir: Path) -> None:
+    relative_dir = dataset_dir.resolve().relative_to(ROOT.resolve())
     payload = {
-        "path": str(dataset_dir.resolve()),
+        "path": relative_dir.as_posix(),
         "train": "images/train",
         "val": "images/val",
         "names": {idx: name for idx, name in enumerate(WORKSPACE_CLASSES)},

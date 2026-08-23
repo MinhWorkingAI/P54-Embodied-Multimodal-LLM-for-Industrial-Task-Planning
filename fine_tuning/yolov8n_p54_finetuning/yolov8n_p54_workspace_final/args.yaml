@@ -1,7 +1,7 @@
 task: detect
 mode: train
 model: yolov8n.pt
-data: /Users/diniththejana/Documents/GitHub/P54-Embodied-Multimodal-LLM-for-Industrial-Task-Planning/simulation_backend/vision/datasets/p54_workspace/data.yaml
+data: fine_tuning/yolov8n_p54_finetuning/datasets/p54_workspace/data.yaml
 epochs: 5
 time: null
 patience: 5
@@ -12,7 +12,7 @@ save_period: -1
 cache: false
 device: cpu
 workers: 0
-project: /Users/diniththejana/Documents/GitHub/P54-Embodied-Multimodal-LLM-for-Industrial-Task-Planning/simulation_backend/vision/training_runs
+project: fine_tuning/yolov8n_p54_finetuning
 name: yolov8n_p54_workspace_final
 exist_ok: true
 pretrained: true
@@ -113,4 +113,4 @@ auto_augment: randaugment
 erasing: 0.4
 cfg: null
 tracker: tracktrack.yaml
-save_dir: /Users/diniththejana/Documents/GitHub/P54-Embodied-Multimodal-LLM-for-Industrial-Task-Planning/simulation_backend/vision/training_runs/yolov8n_p54_workspace_final
+save_dir: fine_tuning/yolov8n_p54_finetuning/yolov8n_p54_workspace_final

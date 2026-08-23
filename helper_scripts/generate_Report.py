@@ -30,6 +30,7 @@ import csv
 import json
 import argparse
 from datetime import datetime
+from pathlib import Path
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -110,48 +111,8 @@ def academic_block(title, bullets, S):
 
 
 # ── DATA LOADING & QUANTITATIVE METRICS ───────────────────────────────────────
-
-BASELINE_RESULTS = {
-    "overall": {
-        "parse_success_rate": 88.0,
-        "instruction_accuracy": 52.0,
-        "action_accuracy": 88.0,
-        "object_accuracy": 88.0,
-        "destination_accuracy": 84.0,
-        "spatial_accuracy": 60.0,
-        "avg_latency_ms": 0.005,
-        "error_rate": 12.0,
-    },
-    "by_category": {
-        "simple":     {"instruction_accuracy": 60.0, "avg_latency_ms": 0.01},
-        "spatial":    {"instruction_accuracy": 60.0, "avg_latency_ms": 0.01},
-        "synonym":    {"instruction_accuracy": 60.0, "avg_latency_ms": 0.01},
-        "multi_step": {"instruction_accuracy": 33.3, "avg_latency_ms": 0.01},
-        "ambiguous":  {"instruction_accuracy": 0.0,  "avg_latency_ms": 0.01},
-        "edge_case":  {"instruction_accuracy": 75.0, "avg_latency_ms": 0.01},
-    }
-}
-
-GPT4O_RESULTS = {
-    "overall": {
-        "parse_success_rate": 100.0,
-        "instruction_accuracy": 85.0,
-        "action_accuracy": 96.0,
-        "object_accuracy": 92.0,
-        "destination_accuracy": 88.0,
-        "spatial_accuracy": 80.0,
-        "avg_latency_ms": 2500.0,
-        "error_rate": 0.0,
-    },
-    "by_category": {
-        "simple":     {"instruction_accuracy": 100.0, "avg_latency_ms": 1800.0},
-        "spatial":    {"instruction_accuracy": 80.0,  "avg_latency_ms": 2800.0},
-        "synonym":    {"instruction_accuracy": 80.0,  "avg_latency_ms": 2400.0},
-        "multi_step": {"instruction_accuracy": 83.3,  "avg_latency_ms": 3200.0},
-        "ambiguous":  {"instruction_accuracy": 88.0,  "avg_latency_ms": 2600.0},
-        "edge_case":  {"instruction_accuracy": 75.0,  "avg_latency_ms": 2200.0},
-    }
-}
+# All figures in the report are read from the evaluation exports produced by
+# `llm_backend/LLM_eval/eval_report.py --export` — nothing here is hardcoded.
 
 def load_csv(path):
     if not os.path.exists(path):
@@ -167,6 +128,40 @@ def load_json(path):
         return None
     with open(path) as f:
         return json.load(f)
+
+
+def _to_number(value):
+    """Best-effort str -> float conversion; None for blank/non-numeric cells."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def load_evaluation_metrics(csv_path):
+    """
+    Load evaluation_metrics.csv (as written by eval_report.py::export_results)
+    and group its rows into:
+        {model_display: {"overall": {...}, "by_category": {category: {...}}}}
+    Returns {} if the CSV is missing or empty.
+    """
+    rows = load_csv(csv_path)
+    if not rows:
+        return {}
+
+    metrics: dict = {}
+    for row in rows:
+        model    = row.get("model")
+        category = row.get("category")
+        if not model or not category:
+            continue
+        data = {k: _to_number(v) for k, v in row.items() if k not in ("model", "category")}
+        entry = metrics.setdefault(model, {"overall": {}, "by_category": {}})
+        if category == "OVERALL":
+            entry["overall"] = data
+        else:
+            entry["by_category"][category] = data
+    return metrics
 
 
 # ── PDF SECTIONS ──────────────────────────────────────────────────────────────
@@ -436,6 +431,14 @@ def build_results(story, S, csv_path=None, json_path=None):
     story.append(Paragraph("6. Evaluation & Benchmarking Experimental Data", S["h1"]))
     story.append(hr(PRIMARY_NAVY, 1))
 
+    model_metrics = load_evaluation_metrics(csv_path)
+    if not model_metrics:
+        story.append(Paragraph(
+            f"No evaluation data found at '{csv_path}'. Run "
+            "'python eval_report.py --export' from llm_backend/LLM_eval/ to generate "
+            "evaluation_metrics.csv, then re-run this report.", S["body"]))
+        return
+
     # ── Overall comparison table ───────────────────────────────────────────────
     story.append(Paragraph("6.1 Comparative Model Performance Summary", S["h2"]))
 
@@ -450,21 +453,18 @@ def build_results(story, S, csv_path=None, json_path=None):
         ("Error Rate (%)", "error_rate"),
     ]
 
-    models = {
-        "GPT-4o Benchmarks": GPT4O_RESULTS["overall"],
-        "Rule-Based Baseline": BASELINE_RESULTS["overall"],
-    }
+    models = list(model_metrics.keys())
 
-    header = [Paragraph("<b>Evaluation Metric Metric</b>", S["table_cell_bold"])]
-    for m in models.keys():
+    header = [Paragraph("<b>Evaluation Metric</b>", S["table_cell_bold"])]
+    for m in models:
         header.append(Paragraph(f"<b>{m}</b>", S["table_cell_bold"]))
-    
+
     rows = [header]
     for label, key in metrics:
         row = [Paragraph(label, S["table_cell"])]
-        for m, data in models.items():
-            val = data.get(key, "—")
-            val_str = f"{val:.1f}" if isinstance(val, float) else str(val)
+        for m in models:
+            val = model_metrics[m]["overall"].get(key)
+            val_str = f"{val:.1f}" if isinstance(val, float) else "—"
             row.append(Paragraph(val_str, S["table_cell"]))
         rows.append(row)
 
@@ -482,27 +482,24 @@ def build_results(story, S, csv_path=None, json_path=None):
     story.append(Spacer(1, 14))
 
     # ── Category breakdown ─────────────────────────────────────────────────────
-    story.append(Paragraph("6.2 Target Instruction Accuracy Breakdown by Category", S["h2"]))
+    story.append(Paragraph("6.2 Instruction Accuracy by Category", S["h2"]))
 
-    cats = ["simple", "spatial", "synonym", "multi_step", "ambiguous", "edge_case"]
-    cat_rows = [[
-        Paragraph("<b>Instruction Complexity Category</b>", S["table_cell_bold"]),
-        Paragraph("<b>GPT-4o Accuracy</b>", S["table_cell_bold"]),
-        Paragraph("<b>Baseline Accuracy</b>", S["table_cell_bold"]),
-        Paragraph("<b>Performance Variance</b>", S["table_cell_bold"])
-    ]]
-    for cat in cats:
-        gpt_acc  = GPT4O_RESULTS["by_category"].get(cat, {}).get("instruction_accuracy", 0)
-        base_acc = BASELINE_RESULTS["by_category"].get(cat, {}).get("instruction_accuracy", 0)
-        gap      = gpt_acc - base_acc
-        cat_rows.append([
-            Paragraph(cat.replace("_", " ").title(), S["table_cell"]),
-            Paragraph(f"{gpt_acc:.1f}%", S["table_cell"]),
-            Paragraph(f"{base_acc:.1f}%", S["table_cell"]),
-            Paragraph(f"+{gap:.1f}pp", S["table_cell_bold"])
-        ])
+    categories = sorted({
+        cat for m in models for cat in model_metrics[m]["by_category"]
+    })
 
-    cw2 = [(W-4*cm)/4]*4
+    cat_header = [Paragraph("<b>Instruction Complexity Category</b>", S["table_cell_bold"])]
+    for m in models:
+        cat_header.append(Paragraph(f"<b>{m}</b>", S["table_cell_bold"]))
+    cat_rows = [cat_header]
+    for cat in categories:
+        row = [Paragraph(cat.replace("_", " ").title(), S["table_cell"])]
+        for m in models:
+            val = model_metrics[m]["by_category"].get(cat, {}).get("instruction_accuracy")
+            row.append(Paragraph(f"{val:.1f}%" if isinstance(val, float) else "—", S["table_cell"]))
+        cat_rows.append(row)
+
+    cw2 = [4.5*cm] + [(W-4*cm-4.5*cm)/len(models)]*len(models)
     ct = Table(cat_rows, colWidths=cw2, repeatRows=1)
     ct.setStyle(TableStyle([
         ("BACKGROUND", (0,0), (-1,0), LIGHT_GRAY),
@@ -513,10 +510,9 @@ def build_results(story, S, csv_path=None, json_path=None):
         ("BOTTOMPADDING", (0,0), (-1,-1), 6),
     ]))
     story.append(ct)
-    
+
     story.append(Spacer(1, 8))
-    story.append(Paragraph("<i>Note: Empirical data compiled across localized test suites. "
-                           "Baseline runs are completely reproducible via the evaluation tracking utilities.</i>", S["body_sm"]))
+    story.append(Paragraph(f"<i>Note: Data loaded from '{csv_path}'.</i>", S["body_sm"]))
 
 
 def build_methodology(story, S):
@@ -627,6 +623,11 @@ def main():
     ap.add_argument("--json",   default="llm_backend/LLM_eval/evaluation_results.json")
     ap.add_argument("--output", default="P54_Evaluation_Report.pdf")
     args = ap.parse_args()
+
+    output_path = Path(args.output)
+    if not output_path.is_absolute():
+        output_path = Path(__file__).resolve().parent / output_path
+    args.output = str(output_path)
 
     print(f"Generating academic report → {args.output}")
 

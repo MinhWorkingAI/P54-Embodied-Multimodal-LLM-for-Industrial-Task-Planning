@@ -101,8 +101,7 @@ P54-Embodied-Multimodal-LLM-for-Industrial-Task-Planning/
 │   │   ├── detection_base.py            ← Abstract detector interface
 │   │   ├── ground_truth.py              ← Exact-position fallback detector
 │   │   ├── detection_implementation/    ← colour_detector.py, yolo_detector.py
-│   │   ├── detection_weight/            ← Cached YOLO weights (downloaded on first run)
-│   │   └── training_runs/               ← Fine-tuned YOLO checkpoints (not wired into runtime)
+│   │   └── detection_weight/            ← Cached YOLO weights (downloaded on first run)
 │   │
 │   └── robots/                          ← Real robot implementations
 │       ├── robot_base.py                ← Abstract RobotBase interface
@@ -110,10 +109,9 @@ P54-Embodied-Multimodal-LLM-for-Industrial-Task-Planning/
 │       ├── Kuka_IIWA.py                 ← ROBOT_MODEL=kuka
 │       └── gripper/                     ← franka_hand.py, gripper_base.py
 │
-├── scripts/                             ← Standalone utility scripts
-│   ├── generate_Report.py               ← Builds the PDF evaluation report
-│   ├── generate_yolo_synthetic_dataset.py
-│   └── verify_yolo_workspace.py
+├── fine_tuning/                         ← Model fine-tuning artifacts (datasets, training runs, weights)
+│
+├── helper_scripts/                      ← Standalone utility scripts, run independently of the main pipeline
 │
 ├── tests/                               ← Test suite (145 tests total)
 │   ├── test_llm_module.py               ← 40 tests (28 unit + 12 integration)

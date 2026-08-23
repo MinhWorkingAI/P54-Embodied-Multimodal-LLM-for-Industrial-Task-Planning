@@ -26,7 +26,7 @@ REQUIRED_LABELS = [
 
 
 def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[1]
+    return Path(__file__).resolve().parents[2]
 
 
 ROOT = _repo_root()
@@ -36,7 +36,10 @@ if str(ROOT) not in sys.path:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--weights", default="yolov8n_p54_workspace.pt")
+    parser.add_argument(
+        "--weights",
+        default="fine_tuning/yolov8n_p54_finetuning/yolov8n_p54_workspace_final/weights/best.pt",
+    )
     parser.add_argument("--confidence", default=os.getenv("YOLO_CONFIDENCE", "0.25"))
     parser.add_argument("--iou", default=os.getenv("YOLO_IOU", "0.45"))
     parser.add_argument("--device", default=os.getenv("YOLO_DEVICE", "cpu"))

@@ -1,4 +1,4 @@
-path: /Users/diniththejana/Documents/GitHub/P54-Embodied-Multimodal-LLM-for-Industrial-Task-Planning/simulation_backend/vision/datasets/p54_workspace
+path: fine_tuning/yolov8n_p54_finetuning/datasets/p54_workspace
 train: images/train
 val: images/val
 names:
