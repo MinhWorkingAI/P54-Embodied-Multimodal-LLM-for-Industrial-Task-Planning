@@ -1223,5 +1223,266 @@
       }
     },
     "completed_at": "2026-08-23T08:50:00.730114+00:00"
+  },
+  {
+    "task_id": "15ce9e7d",
+    "instruction": "pick up the red block and put in the left tray",
+    "model": "huggingface",
+    "created_at": "2026-08-23T10:34:06.400944+00:00",
+    "status": "completed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-08-23T10:34:38.054224+00:00",
+        "latency_ms": 31652.1,
+        "payload": {
+          "action": "pick",
+          "object_target": "red block",
+          "destination": "left tray",
+          "spatial_relation": null,
+          "confidence": "high",
+          "raw_instruction": "pick up the red block and put in the left tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "success",
+        "timestamp": "2026-08-23T10:34:38.823555+00:00",
+        "latency_ms": 769.5,
+        "payload": {
+          "object_count": 7,
+          "objects": [
+            "red block",
+            "blue block",
+            "green block",
+            "yellow block",
+            "left tray",
+            "right tray",
+            "workstation"
+          ],
+          "source": "REAL"
+        },
+        "error": null
+      },
+      "task_plan": {
+        "stage": "task_plan",
+        "status": "success",
+        "timestamp": "2026-08-23T10:34:38.826173+00:00",
+        "latency_ms": 2.2,
+        "payload": {
+          "steps": 5,
+          "commands": [
+            "locate",
+            "move",
+            "pick",
+            "move",
+            "place"
+          ]
+        },
+        "error": null
+      },
+      "execution": {
+        "stage": "execution",
+        "status": "success",
+        "timestamp": "2026-08-23T10:34:42.122469+00:00",
+        "latency_ms": 1002.5,
+        "payload": {
+          "step": 5,
+          "command": "place",
+          "result": "Placed 'red block' at 'left tray' (0.650, 0.450, 0.010)"
+        },
+        "error": null
+      },
+      "feedback": {
+        "stage": "feedback",
+        "status": "success",
+        "timestamp": "2026-08-23T10:34:42.122469+00:00",
+        "latency_ms": null,
+        "payload": {
+          "steps_completed": 5,
+          "total_steps": 5,
+          "latency_ms": 3295.301499980269
+        },
+        "error": null
+      }
+    },
+    "completed_at": "2026-08-23T10:34:42.122469+00:00"
+  },
+  {
+    "task_id": "862b07b4",
+    "instruction": "pick up the red block and put in the left tray",
+    "model": "huggingface",
+    "created_at": "2026-08-23T10:36:54.682008+00:00",
+    "status": "completed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-08-23T10:37:25.473499+00:00",
+        "latency_ms": 30790.9,
+        "payload": {
+          "action": "pick",
+          "object_target": "red block",
+          "destination": "left tray",
+          "spatial_relation": null,
+          "confidence": "high",
+          "raw_instruction": "pick up the red block and put in the left tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "success",
+        "timestamp": "2026-08-23T10:37:26.288211+00:00",
+        "latency_ms": 814.0,
+        "payload": {
+          "object_count": 7,
+          "objects": [
+            "red block",
+            "blue block",
+            "green block",
+            "yellow block",
+            "left tray",
+            "right tray",
+            "workstation"
+          ],
+          "source": "REAL"
+        },
+        "error": null
+      },
+      "task_plan": {
+        "stage": "task_plan",
+        "status": "success",
+        "timestamp": "2026-08-23T10:37:26.288211+00:00",
+        "latency_ms": 0.2,
+        "payload": {
+          "steps": 5,
+          "commands": [
+            "locate",
+            "move",
+            "pick",
+            "move",
+            "place"
+          ]
+        },
+        "error": null
+      },
+      "execution": {
+        "stage": "execution",
+        "status": "success",
+        "timestamp": "2026-08-23T10:37:27.249914+00:00",
+        "latency_ms": 351.7,
+        "payload": {
+          "step": 5,
+          "command": "place",
+          "result": "Placed 'red block' at 'left tray' (0.650, 0.450, 0.010)."
+        },
+        "error": null
+      },
+      "feedback": {
+        "stage": "feedback",
+        "status": "success",
+        "timestamp": "2026-08-23T10:37:27.249914+00:00",
+        "latency_ms": null,
+        "payload": {
+          "steps_completed": 5,
+          "total_steps": 5,
+          "latency_ms": 959.836499998346
+        },
+        "error": null
+      }
+    },
+    "completed_at": "2026-08-23T10:37:27.249914+00:00"
+  },
+  {
+    "task_id": "f359d19e",
+    "instruction": "pick up the red block and put in the left tray",
+    "model": "huggingface",
+    "created_at": "2026-08-23T10:37:56.496388+00:00",
+    "status": "completed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-08-23T10:38:27.154884+00:00",
+        "latency_ms": 30658.0,
+        "payload": {
+          "action": "pick",
+          "object_target": "red block",
+          "destination": "left tray",
+          "spatial_relation": null,
+          "confidence": "high",
+          "raw_instruction": "pick up the red block and put in the left tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "success",
+        "timestamp": "2026-08-23T10:38:27.510016+00:00",
+        "latency_ms": 354.1,
+        "payload": {
+          "object_count": 7,
+          "objects": [
+            "red block",
+            "blue block",
+            "green block",
+            "yellow block",
+            "left tray",
+            "right tray",
+            "workstation"
+          ],
+          "source": "REAL"
+        },
+        "error": null
+      },
+      "task_plan": {
+        "stage": "task_plan",
+        "status": "success",
+        "timestamp": "2026-08-23T10:38:27.510016+00:00",
+        "latency_ms": 0.2,
+        "payload": {
+          "steps": 5,
+          "commands": [
+            "locate",
+            "move",
+            "pick",
+            "move",
+            "place"
+          ]
+        },
+        "error": null
+      },
+      "execution": {
+        "stage": "execution",
+        "status": "success",
+        "timestamp": "2026-08-23T10:38:28.468330+00:00",
+        "latency_ms": 341.3,
+        "payload": {
+          "step": 5,
+          "command": "place",
+          "result": "Placed 'red block' at 'left tray' (0.650, 0.450, 0.010)."
+        },
+        "error": null
+      },
+      "feedback": {
+        "stage": "feedback",
+        "status": "success",
+        "timestamp": "2026-08-23T10:38:28.468330+00:00",
+        "latency_ms": null,
+        "payload": {
+          "steps_completed": 5,
+          "total_steps": 5,
+          "latency_ms": 956.7966000176966
+        },
+        "error": null
+      }
+    },
+    "completed_at": "2026-08-23T10:38:28.468330+00:00"
   }
 ]

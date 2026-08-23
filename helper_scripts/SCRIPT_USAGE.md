@@ -1,39 +1,11 @@
 # Helper Scripts — Usage Guide
 
 This file documents every script in `helper_scripts/`. Each script gets its own section below, in
-the same fixed four-field format (**Description**, **Input**, **Output**), so the file stays easy
-to scan as scripts are added.
-
-**Adding a new script:** copy the `Template` section, rename its heading, fill in the four fields,
-and add a line to the Index. Don't reorder or reformat existing sections — each one is self
-contained, so appending a new one never requires touching the others.
+the same fixed four-field format (**Description**, **Input**, **Output**)
 
 ## Index
 
 - [`generate_Report.py`](#generate_reportpy)
-
----
-
-## Template
-
-> Copy everything between the `###` heading and the next `---` when documenting a new script. Keep
-> the field order and bold labels exactly as shown.
-
-### `<script_filename>.py`
-
-**Description:**
-One short paragraph — what the script does, and why it exists (what problem/task it covers).
-
-**Input:**
-- CLI arguments / environment variables / files the script reads, with their defaults.
-- Anything it imports or references from the main codebase (`llm_backend/`, `simulation_backend/`,
-  `task_planner/`, etc.) — module imports, config files, or generated data it depends on. State
-  "none" if the script is fully standalone.
-
-**Output:**
-- What the script produces and in what format (file, printed report, exit code, etc.).
-- Where that output is written — the exact path (relative to the repo root) — or "printed to
-  terminal only" if it writes no file.
 
 ---
 
