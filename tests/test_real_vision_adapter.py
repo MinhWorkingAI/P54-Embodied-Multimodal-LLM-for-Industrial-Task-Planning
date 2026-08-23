@@ -1,6 +1,6 @@
 import os
 
-from vision_backend.scene_representation import get_current_scene
+from simulation_backend.vision.scene_representation import get_current_scene
 
 
 class _Entry:

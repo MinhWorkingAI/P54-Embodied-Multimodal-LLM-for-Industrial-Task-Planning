@@ -4,7 +4,7 @@ main.py
 Wires all modules together:
     User instruction
         → LLM parse          (llm_backend/custom_LLM_parser.py)
-        → Vision lookup      (vision_backend/scene_representation.py)
+        → Vision lookup      (simulation_backend/vision/scene_representation.py)
         → Task plan          (task_planner/planner.py)
         → Execution          (simulation_backend/executor.py)
         → Feedback           (inline validation)
@@ -46,7 +46,7 @@ from llm_backend.custom_LLM_parser import parse_instruction
 from llm_backend.schema            import ParsedInstruction, ConfidenceLevel
 from llm_backend.tracker           import PipelineTracker
 from task_planner.planner          import TaskPlanner
-from vision_backend.scene_representation import get_current_scene
+from simulation_backend.vision.scene_representation import get_current_scene
 from simulation_backend.mock_robot import MockRobot
 from simulation_backend.executor   import Executor
 from simulation_backend.action_schema import plan_to_commands
@@ -221,8 +221,10 @@ def run_pipeline(
             print(f"       Objects in scene: {[o.get('label') for o in objects]}")
             print(f"       Latency         : {lat:.0f}ms")
 
-        # Show detection bounding boxes — GUI + live simulation mode only
-        if _USE_LIVE and sim is not None and os.getenv("SIMULATION_MODE", "DIRECT").upper() == "GUI":
+        # Show detection bounding boxes — DIRECT + live simulation mode only.
+        # GUI mode already has PyBullet's own 3D window; skip the popup there
+        # so only one window appears instead of two.
+        if _USE_LIVE and sim is not None and os.getenv("SIMULATION_MODE", "DIRECT").upper() != "GUI":
             _show_detection_window(sim)
 
     except FileNotFoundError as e:
@@ -340,7 +342,8 @@ def _show_detection_window(sim) -> None:
 
     Called at the end of Stage 2 (Vision Lookup) when:
         - USE_LIVE_SIMULATION=true
-        - SIMULATION_MODE=GUI
+        - SIMULATION_MODE=DIRECT (skipped in GUI mode, which already has
+          PyBullet's own 3D window — avoids showing two windows at once)
 
     What is shown:
         - Bounding boxes from the active primary detector (colour / YOLO)
@@ -427,6 +430,10 @@ def _show_detection_window(sim) -> None:
         cv2.imshow(WINDOW, display)
         cv2.waitKey(0)
         cv2.destroyWindow(WINDOW)
+        # Flush pending window-close messages so Windows doesn't flag the
+        # app as "Not Responding" for a few seconds after the popup closes.
+        for _ in range(4):
+            cv2.waitKey(1)
 
     except Exception as e:
         logger.warning(f"[detection window] Could not display: {e}")

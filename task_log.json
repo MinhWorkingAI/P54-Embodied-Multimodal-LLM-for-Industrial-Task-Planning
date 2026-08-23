@@ -845,5 +845,383 @@
       }
     },
     "completed_at": "2026-08-19T03:26:28.892522+00:00"
+  },
+  {
+    "task_id": "9785ee90",
+    "instruction": "pick up the blue block",
+    "model": "huggingface",
+    "created_at": "2026-08-23T08:04:47.822130+00:00",
+    "status": "completed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-08-23T08:05:22.693561+00:00",
+        "latency_ms": 34870.9,
+        "payload": {
+          "action": "pick",
+          "object_target": "blue block",
+          "destination": null,
+          "spatial_relation": null,
+          "confidence": "high",
+          "raw_instruction": "pick up the blue block",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "success",
+        "timestamp": "2026-08-23T08:05:23.162501+00:00",
+        "latency_ms": 468.2,
+        "payload": {
+          "object_count": 7,
+          "objects": [
+            "red block",
+            "blue block",
+            "green block",
+            "yellow block",
+            "left tray",
+            "right tray",
+            "workstation"
+          ],
+          "source": "REAL"
+        },
+        "error": null
+      },
+      "task_plan": {
+        "stage": "task_plan",
+        "status": "success",
+        "timestamp": "2026-08-23T08:05:23.162501+00:00",
+        "latency_ms": 0.5,
+        "payload": {
+          "steps": 3,
+          "commands": [
+            "locate",
+            "move",
+            "pick"
+          ]
+        },
+        "error": null
+      },
+      "execution": {
+        "stage": "execution",
+        "status": "success",
+        "timestamp": "2026-08-23T08:05:23.164562+00:00",
+        "latency_ms": 0.0,
+        "payload": {
+          "step": 3,
+          "command": "pick",
+          "result": "Picked up 'blue block' at (0.25, 0.35)"
+        },
+        "error": null
+      },
+      "feedback": {
+        "stage": "feedback",
+        "status": "success",
+        "timestamp": "2026-08-23T08:05:23.164562+00:00",
+        "latency_ms": null,
+        "payload": {
+          "steps_completed": 3,
+          "total_steps": 3,
+          "latency_ms": 0.3871999797411263
+        },
+        "error": null
+      }
+    },
+    "completed_at": "2026-08-23T08:05:23.164562+00:00"
+  },
+  {
+    "task_id": "8b38d6c4",
+    "instruction": "pick up the blue block",
+    "model": "huggingface",
+    "created_at": "2026-08-23T08:06:32.937590+00:00",
+    "status": "completed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-08-23T08:07:05.809889+00:00",
+        "latency_ms": 32871.6,
+        "payload": {
+          "action": "pick",
+          "object_target": "blue block",
+          "destination": null,
+          "spatial_relation": null,
+          "confidence": "high",
+          "raw_instruction": "pick up the blue block",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "success",
+        "timestamp": "2026-08-23T08:07:07.176079+00:00",
+        "latency_ms": 1365.6,
+        "payload": {
+          "object_count": 7,
+          "objects": [
+            "red block",
+            "blue block",
+            "green block",
+            "yellow block",
+            "left tray",
+            "right tray",
+            "workstation"
+          ],
+          "source": "REAL"
+        },
+        "error": null
+      },
+      "task_plan": {
+        "stage": "task_plan",
+        "status": "success",
+        "timestamp": "2026-08-23T08:07:16.125068+00:00",
+        "latency_ms": 0.6,
+        "payload": {
+          "steps": 3,
+          "commands": [
+            "locate",
+            "move",
+            "pick"
+          ]
+        },
+        "error": null
+      },
+      "execution": {
+        "stage": "execution",
+        "status": "success",
+        "timestamp": "2026-08-23T08:07:16.126067+00:00",
+        "latency_ms": 0.0,
+        "payload": {
+          "step": 3,
+          "command": "pick",
+          "result": "Picked up 'blue block' at (0.25, 0.35)"
+        },
+        "error": null
+      },
+      "feedback": {
+        "stage": "feedback",
+        "status": "success",
+        "timestamp": "2026-08-23T08:07:16.126067+00:00",
+        "latency_ms": null,
+        "payload": {
+          "steps_completed": 3,
+          "total_steps": 3,
+          "latency_ms": 0.3679999790620059
+        },
+        "error": null
+      }
+    },
+    "completed_at": "2026-08-23T08:07:16.126067+00:00"
+  },
+  {
+    "task_id": "23b46630",
+    "instruction": "pick up the blue block and place it in any tray",
+    "model": "huggingface",
+    "created_at": "2026-08-23T08:07:45.663444+00:00",
+    "status": "failed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-08-23T08:08:15.257187+00:00",
+        "latency_ms": 29593.0,
+        "payload": {
+          "action": "pick",
+          "object_target": "blue block",
+          "destination": "any tray",
+          "spatial_relation": null,
+          "confidence": "high",
+          "raw_instruction": "pick up the blue block and place it in any tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "failed",
+        "timestamp": "2026-08-23T08:08:15.258185+00:00",
+        "latency_ms": null,
+        "payload": null,
+        "error": "Not connected to physics server."
+      }
+    },
+    "completed_at": "2026-08-23T08:08:15.258185+00:00"
+  },
+  {
+    "task_id": "017c22df",
+    "instruction": "pick up the blue block and place it in left tray",
+    "model": "huggingface",
+    "created_at": "2026-08-23T08:34:30.897464+00:00",
+    "status": "completed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-08-23T08:35:08.243071+00:00",
+        "latency_ms": 37345.5,
+        "payload": {
+          "action": "pick",
+          "object_target": "blue block",
+          "destination": "left tray",
+          "spatial_relation": null,
+          "confidence": "high",
+          "raw_instruction": "pick up the blue block and place it in left tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "success",
+        "timestamp": "2026-08-23T08:35:09.151759+00:00",
+        "latency_ms": 908.4,
+        "payload": {
+          "object_count": 7,
+          "objects": [
+            "red block",
+            "blue block",
+            "green block",
+            "yellow block",
+            "left tray",
+            "right tray",
+            "workstation"
+          ],
+          "source": "REAL"
+        },
+        "error": null
+      },
+      "task_plan": {
+        "stage": "task_plan",
+        "status": "success",
+        "timestamp": "2026-08-23T08:35:09.153266+00:00",
+        "latency_ms": 0.7,
+        "payload": {
+          "steps": 5,
+          "commands": [
+            "locate",
+            "move",
+            "pick",
+            "move",
+            "place"
+          ]
+        },
+        "error": null
+      },
+      "execution": {
+        "stage": "execution",
+        "status": "success",
+        "timestamp": "2026-08-23T08:35:12.964276+00:00",
+        "latency_ms": 1079.7,
+        "payload": {
+          "step": 5,
+          "command": "place",
+          "result": "Placed 'blue block' at 'left tray' (0.650, 0.450, 0.010)"
+        },
+        "error": null
+      },
+      "feedback": {
+        "stage": "feedback",
+        "status": "success",
+        "timestamp": "2026-08-23T08:35:12.964276+00:00",
+        "latency_ms": null,
+        "payload": {
+          "steps_completed": 5,
+          "total_steps": 5,
+          "latency_ms": 3810.0649999978486
+        },
+        "error": null
+      }
+    },
+    "completed_at": "2026-08-23T08:35:12.964276+00:00"
+  },
+  {
+    "task_id": "9b0a3b04",
+    "instruction": "pick up the blue block and place it in left tray",
+    "model": "huggingface",
+    "created_at": "2026-08-23T08:49:19.962991+00:00",
+    "status": "completed",
+    "stages": {
+      "llm_parse": {
+        "stage": "llm_parse",
+        "status": "success",
+        "timestamp": "2026-08-23T08:49:56.035607+00:00",
+        "latency_ms": 36072.0,
+        "payload": {
+          "action": "pick",
+          "object_target": "blue block",
+          "destination": "left tray",
+          "spatial_relation": null,
+          "confidence": "high",
+          "raw_instruction": "pick up the blue block and place it in left tray",
+          "notes": null
+        },
+        "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "success",
+        "timestamp": "2026-08-23T08:49:56.941287+00:00",
+        "latency_ms": 904.8,
+        "payload": {
+          "object_count": 7,
+          "objects": [
+            "red block",
+            "blue block",
+            "green block",
+            "yellow block",
+            "left tray",
+            "right tray",
+            "workstation"
+          ],
+          "source": "REAL"
+        },
+        "error": null
+      },
+      "task_plan": {
+        "stage": "task_plan",
+        "status": "success",
+        "timestamp": "2026-08-23T08:49:56.942287+00:00",
+        "latency_ms": 0.7,
+        "payload": {
+          "steps": 5,
+          "commands": [
+            "locate",
+            "move",
+            "pick",
+            "move",
+            "place"
+          ]
+        },
+        "error": null
+      },
+      "execution": {
+        "stage": "execution",
+        "status": "success",
+        "timestamp": "2026-08-23T08:50:00.729611+00:00",
+        "latency_ms": 1080.4,
+        "payload": {
+          "step": 5,
+          "command": "place",
+          "result": "Placed 'blue block' at 'left tray' (0.650, 0.450, 0.010)"
+        },
+        "error": null
+      },
+      "feedback": {
+        "stage": "feedback",
+        "status": "success",
+        "timestamp": "2026-08-23T08:50:00.730114+00:00",
+        "latency_ms": null,
+        "payload": {
+          "steps_completed": 5,
+          "total_steps": 5,
+          "latency_ms": 3786.397299991222
+        },
+        "error": null
+      }
+    },
+    "completed_at": "2026-08-23T08:50:00.730114+00:00"
   }
 ]

@@ -1,6 +1,6 @@
 """
-vision_backend/scene_representation.py
---------------------------------------
+simulation_backend/vision/scene_representation.py
+---------------------------------------------------
 Production scene adapter for the main pipeline.
 
 The public contract is intentionally small:

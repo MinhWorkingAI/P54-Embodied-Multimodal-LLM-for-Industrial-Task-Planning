@@ -18,9 +18,9 @@ Public interface:
         planner-compatible scene dict:
         {"objects": [{"label": str, "position": (x, y)}, ...]}
 
-    get_robot() -> MockRobot
-        Returns the active robot instance ready for Executor.
-        Phase 1: always MockRobot. Phase 3: real PyBullet robot.
+    get_robot() -> RobotBase | MockRobot
+        Returns the active robot instance ready for Executor — MockRobot,
+        FrankaPanda, or KukaIIWA, selected by ROBOT_MODEL in .env.
 
     reset() -> None
         Resets all object positions to their scene_config.yaml defaults.
@@ -124,7 +124,7 @@ class Simulation:
         Returns:
             {
                 "objects": [
-                    {"label": "red block",  "position": (0.45, -0.20)},
+                    {"label": "red block",  "position": [0.45, -0.20, 0.05]},
                     ...
                 ]
             }
@@ -178,10 +178,8 @@ class Simulation:
 
     def get_robot(self):
         """
-        Return the active robot instance.
-
-        Phase 1 & 2: always MockRobot.
-        Phase 3: returns a RobotBase subclass selected by ROBOT_MODEL env var.
+        Return the active robot instance — MockRobot, FrankaPanda, or
+        KukaIIWA — selected by ROBOT_MODEL in .env (see _load_robot()).
         """
         return self._robot
 

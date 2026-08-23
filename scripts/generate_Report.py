@@ -376,7 +376,7 @@ def build_architecture(story, S):
     stages = [
         ["Stage", "Module Identifier", "Input Vector Data", "Output Structural Schema", "Functional Technology Stack"],
         ["1", "LLM Instruction Parser\n(llm_backend/)", "Natural language text strings", "ParsedInstruction object\n(action, target, confidence)", "LangChain Core / Open-source API wrappers via Pydantic"],
-        ["2", "Vision Environment Lookup\n(vision_backend/)", "Active image stream data / scene JSON", "Coordinate Entity Map\n{object_id: coordinates}", "YOLOv8 Object Detection framework / Mock stub layers"],
+        ["2", "Vision Environment Lookup\n(simulation_backend/vision/)", "Active image stream data / scene JSON", "Coordinate Entity Map\n{object_id: coordinates}", "YOLOv8 Object Detection framework / Ground-truth fallback"],
         ["3", "Deterministic Task Planner\n(task_planner/)", "ParsedInstruction + Scene Map", "ActionPlan list sequence\n[RobotCommand]", "Algorithmic geometry solvers / Spatial offset maps"],
         ["4", "Physical Simulation Executor\n(simulation_backend/)", "ActionPlan schema data", "ExecutionResult structure\n(success metrics, latency log)", "MockRobot state machines / PyBullet kinematics pipelines"],
         ["5", "Pipeline Feedback Tracker\n(llm_backend/tracker)", "ExecutionResult object", "System audit trails\n(task_log.json)", "Structured JSON logging utilities"]
