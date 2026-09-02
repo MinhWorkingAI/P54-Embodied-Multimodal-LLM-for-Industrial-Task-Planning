@@ -35,6 +35,8 @@ import sys
 import argparse
 import logging
 import time
+import logging
+logger = logging.getLogger(__name__)
 
 os.environ["PYDANTIC_DISABLE_PLUGINS"] = "1"
 
@@ -347,6 +349,19 @@ def run_interactive(sim=None) -> None:
             break
         except Exception as e:
             print(f"  ✗ Pipeline error: {e}")
+
+robot_type = os.getenv("ROBOT_BACKEND", "mock").lower()
+
+if robot_type == "ros":
+    from simulation_backend.robots.ros_robot import ROSRobot
+    robot = ROSRobot()
+    logger.info("Using ROS2 robot")
+elif robot_type == "real":
+    from simulation_backend.robots.kuka_robot import KukaRobot
+    robot = KukaRobot()
+else:
+    from simulation_backend.mock_robot import MockRobot
+    robot = MockRobot()
 
 
 # ── Entry point ────────────────────────────────────────────────────────────────
