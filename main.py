@@ -4,8 +4,7 @@ main.py
 Wires all modules together:
     User instruction
         → LLM parse          (llm_backend/custom_LLM_parser.py)
-        → Vision lookup      (vision_backend/scene_representation.py  OR
-                              simulation_backend/simulation.py)
+        → Vision lookup      (simulation_backend/vision/scene_representation.py)
         → Task plan          (task_planner/planner.py)
         → Execution          (simulation_backend/executor.py)
         → Feedback           (inline validation)
@@ -13,15 +12,14 @@ Wires all modules together:
 All stages are logged via tracker.py with a unique task_id.
 LLM backend is controlled by LLM_BACKEND in .env — not a CLI flag.
 
-Vision source is controlled by USE_LIVE_SIMULATION in .env:
-    USE_LIVE_SIMULATION=false  (default) — reads JSON from disk
-    USE_LIVE_SIMULATION=true             — uses live PyBullet simulation
+Vision uses the real simulation camera/detector stack.  If VISION_DETECTOR is
+unset, production defaults to VISION_DETECTOR=yolo.
 
 Usage:
-    # Single instruction (JSON fallback)
+    # Single instruction (real vision)
     python main.py "pick up the red block and place it in the left tray"
 
-    # Single instruction (live simulation)
+    # Single instruction (explicit live simulation)
     USE_LIVE_SIMULATION=true python main.py "pick up the red block"
 
     # Interactive mode
@@ -50,7 +48,7 @@ from llm_backend.custom_LLM_parser import parse_instruction
 from llm_backend.schema            import ParsedInstruction, ConfidenceLevel
 from llm_backend.tracker           import PipelineTracker
 from task_planner.planner          import TaskPlanner
-from vision_backend.scene_representation import get_current_scene
+from simulation_backend.vision.scene_representation import get_current_scene
 from simulation_backend.mock_robot import MockRobot
 from simulation_backend.executor   import Executor
 from simulation_backend.action_schema import plan_to_commands
@@ -58,38 +56,50 @@ logging.basicConfig(
     level=logging.WARNING,
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s"
 )
+logger = logging.getLogger(__name__)
 
 SEP = "═" * 60
 
-# ── Live simulation flag ───────────────────────────────────────────────────────
-_USE_LIVE = os.getenv("USE_LIVE_SIMULATION", "false").strip().lower() == "true"
+# ── Real vision defaults ──────────────────────────────────────────────────────
+os.environ.setdefault("VISION_DETECTOR", "yolo")
+_USE_LIVE = os.getenv("USE_LIVE_SIMULATION", "true").strip().lower() == "true"
 
 
 def _get_scene_and_robot(sim=None, verbose: bool = True):
     """
-    Return (scene_dict, robot_instance) from either live simulation or JSON.
+    Return (scene_dict, robot_instance) from the real vision pipeline.
 
-    If USE_LIVE_SIMULATION=true and a Simulation instance is provided,
-    calls sim.get_live_scene(verbose) which prints the detection table
-    inline inside Stage 2 when verbose=True.
-
-    Otherwise falls back to the existing JSON-based get_current_scene()
-    and a fresh MockRobot.
+    If a Simulation instance is provided, reuse it so Stage 2 and execution
+    share the same live workspace.  Otherwise get_current_scene() creates a
+    temporary headless Simulation and returns its real camera/detector scene.
 
     Args:
-        sim     : Simulation instance (or None for JSON mode).
+        sim     : Simulation instance, or None to create a temporary real-vision scene.
         verbose : Whether to print the detection summary table.
 
     Returns:
         (scene dict, robot instance)
     """
-    if _USE_LIVE and sim is not None:
-        scene = sim.get_live_scene(verbose=verbose)
+    if sim is not None:
+        scene = get_current_scene(verbose=verbose, sim=sim)
         robot = sim.get_robot()
     else:
-        scene = get_current_scene()
+        scene = get_current_scene(verbose=verbose)
         robot = MockRobot()
     return scene, robot
+
+
+def _execution_timeout_for_robot(robot) -> float:
+    """
+    Return the per-command execution timeout for the active robot.
+
+    MockRobot commands are near-instant, but real KUKA PyBullet pick/place
+    sequences include multiple IK moves, physics stepping, and settling time.
+    Keep the safety timeout, with an environment override for final tuning.
+    """
+    if getattr(robot, "model_name", "") == "kuka_iiwa" or type(robot).__name__ == "KukaIIWA":
+        return float(os.getenv("KUKA_EXECUTION_TIMEOUT", "15.0"))
+    return float(os.getenv("EXECUTOR_TIMEOUT_SECONDS", "5.0"))
 
 
 # ── Pipeline ───────────────────────────────────────────────────────────────────
@@ -107,8 +117,8 @@ def run_pipeline(
         instruction : Natural language task instruction.
         verbose     : Print progress to stdout.
         tracker     : PipelineTracker instance for cross-domain logging.
-        sim         : Simulation instance (required for live mode).
-                      Pass None to use JSON scene fallback.
+        sim         : Optional Simulation instance. Pass None to let the
+                      vision adapter create a temporary real-vision scene.
 
     Returns:
         Result dict — keys: success, task_id, parsed, plan, execution.
@@ -121,7 +131,7 @@ def run_pipeline(
     # ── Register task ──────────────────────────────────────────────────────────
     task_id = tracker.new_task(instruction, model=_backend)
 
-    vision_label = "Live Simulation" if (_USE_LIVE and sim) else "JSON file"
+    vision_label = "REAL"
 
     if verbose:
         print(f"\n{SEP}")
@@ -195,7 +205,7 @@ def run_pipeline(
         if not objects:
             message = (
                 "No objects detected in the current scene. "
-                "Check the vision scene file or simulation before planning."
+                "Check the real vision simulation before planning."
             )
             print(f"       ⚠ {message}")
 
@@ -212,6 +222,12 @@ def run_pipeline(
         if verbose:
             print(f"       Objects in scene: {[o.get('label') for o in objects]}")
             print(f"       Latency         : {lat:.0f}ms")
+
+        # Show detection bounding boxes — DIRECT + live simulation mode only.
+        # GUI mode already has PyBullet's own 3D window; skip the popup there
+        # so only one window appears instead of two.
+        if _USE_LIVE and sim is not None and os.getenv("SIMULATION_MODE", "DIRECT").upper() != "GUI":
+            _show_detection_window(sim)
 
     except FileNotFoundError as e:
         message = f"Scene file missing: {e}"
@@ -269,7 +285,12 @@ def run_pipeline(
 
     try:
         robot.load_scene(scene)
-        executor = Executor(robot, tracker=tracker, task_id=task_id)
+        executor = Executor(
+            robot,
+            tracker=tracker,
+            task_id=task_id,
+            timeout_seconds=_execution_timeout_for_robot(robot),
+        )
         exec_res = executor.execute(plan, verbose=verbose)
 
         result["execution"] = exec_res
@@ -314,10 +335,161 @@ def run_pipeline(
 
 # ── Interactive mode ───────────────────────────────────────────────────────────
 
+
+
+
+def _show_detection_window(sim) -> None:
+    """
+    Capture one camera frame and display it with detection bounding boxes.
+
+    Called at the end of Stage 2 (Vision Lookup) when:
+        - USE_LIVE_SIMULATION=true
+        - SIMULATION_MODE=DIRECT (skipped in GUI mode, which already has
+          PyBullet's own 3D window — avoids showing two windows at once)
+
+    What is shown:
+        - Bounding boxes from the active primary detector (colour / YOLO)
+          drawn by detector.draw_detections() — each detector uses its own
+          colour scheme (cyan for colour, yellow for YOLO)
+        - Ground truth labels for every registered object derived from the
+          PyBullet segmentation mask — white dot + "label (x, y, z)"
+        - A bottom info bar showing detector name and object count
+
+    Behaviour:
+        - Opens an 800x600 OpenCV window
+        - Blocks until any key is pressed
+        - Closes the window and returns — pipeline continues to Stage 3
+
+    Args:
+        sim : Simulation instance (provides camera, detector, registry)
+    """
+    import cv2
+    import numpy as np
+    import pybullet as p
+
+    WINDOW = "Stage 2 — Detection  (press any key to continue)"
+
+    try:
+        camera   = sim.camera
+        detector = sim.detector
+        registry = sim.registry
+
+        # ── Capture one frame ─────────────────────────────────────────────
+        frame   = camera.capture()
+        display = frame.bgr.copy()
+
+        # ── Primary detector bounding boxes ───────────────────────────────
+        detections = []
+        if detector is not None:
+            try:
+                detections = detector.detect(frame)
+                display    = detector.draw_detections(display, detections)
+            except Exception as e:
+                logger.debug(f"[detection window] Detector error: {e}")
+
+        # ── Ground truth labels from segmentation mask ────────────────────
+        for entry in registry.all_entries():
+            mask = (frame.seg == entry.body_id)
+            if not mask.any():
+                continue
+            ys, xs = np.where(mask)
+            cx, cy = int(xs.mean()), int(ys.mean())
+            try:
+                pos, _ = p.getBasePositionAndOrientation(
+                    entry.body_id, physicsClientId=sim.client
+                )
+                lbl = f"{entry.label} ({pos[0]:.2f}, {pos[1]:.2f}, {pos[2]:.2f})"
+            except Exception:
+                lbl = entry.label
+            cv2.circle(display, (cx, cy), 3, (200, 200, 200), -1)
+            cv2.putText(
+                display, lbl, (cx + 5, cy + 4),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.36,
+                (220, 220, 220), 1, cv2.LINE_AA,
+            )
+
+        # ── Bottom info bar ───────────────────────────────────────────────
+        h, w      = display.shape[:2]
+        bar_h     = 40
+        overlay   = display.copy()
+        cv2.rectangle(overlay, (0, h - bar_h), (w, h), (15, 15, 15), -1)
+        cv2.addWeighted(overlay, 0.8, display, 0.2, 0, display)
+
+        det_name  = detector.name if detector else "ground_truth"
+        det_count = len(detections)
+        cv2.putText(
+            display,
+            f"Detector: {det_name}   Objects detected: {det_count}   "
+            f"Press any key to continue...",
+            (10, h - bar_h + 26),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.46,
+            (0, 210, 255), 1, cv2.LINE_AA,
+        )
+
+        # ── Show and wait ─────────────────────────────────────────────────
+        cv2.namedWindow(WINDOW, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(WINDOW, 800, 600)
+        cv2.imshow(WINDOW, display)
+        cv2.waitKey(0)
+        cv2.destroyWindow(WINDOW)
+        # Flush pending window-close messages so Windows doesn't flag the
+        # app as "Not Responding" for a few seconds after the popup closes.
+        for _ in range(4):
+            cv2.waitKey(1)
+
+    except Exception as e:
+        logger.warning(f"[detection window] Could not display: {e}")
+
+
+def _hold_simulation_open(sim) -> None:
+    """
+    Keep the PyBullet GUI window open after the pipeline completes.
+
+    Steps physics at real-time rate so gravity / settling stays active
+    in the 3D window. Exits when the user types Q + Enter in the terminal.
+    No OpenCV window — the PyBullet 3D view is the only display.
+    """
+    import pybullet as p
+    import time as _time
+    import threading
+
+    print(f"\n{'═'*60}")
+    print(f"  Pipeline complete — PyBullet window open.")
+    print(f"  Type Q + Enter in this terminal to quit.")
+    print(f"{'═'*60}\n")
+
+    quit_flag = threading.Event()
+
+    def _wait_for_q():
+        while not quit_flag.is_set():
+            try:
+                line = input().strip().lower()
+                if line in ("q", "quit", "exit", ""):
+                    quit_flag.set()
+            except EOFError:
+                quit_flag.set()
+                break
+
+    listener = threading.Thread(target=_wait_for_q, daemon=True)
+    listener.start()
+
+    try:
+        while not quit_flag.is_set():
+            p.stepSimulation(physicsClientId=sim.client)
+            _time.sleep(1.0 / 240.0)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print("  Closing simulation.")
+
+
+
+
+
 def run_interactive(sim=None) -> None:
     tracker  = PipelineTracker()
     _backend = os.getenv("LLM_BACKEND", "openai")
-    vision_label = "Live Simulation" if (_USE_LIVE and sim) else "JSON file"
+    vision_label = "REAL"
 
     print(f"\n{SEP}")
     print("  Multimodal LLM — Industrial Task Planning Pipeline")
@@ -384,14 +556,14 @@ if __name__ == "__main__":
 
     # Start simulation if live mode is requested
     sim = None
-    if _USE_LIVE:
+    if _USE_LIVE and (args.interactive or args.instruction):
         try:
             from simulation_backend.simulation import Simulation
             sim = Simulation()
             print(f"  Simulation started — {len(sim.registry)} objects loaded.")
         except Exception as e:
             print(f"  ✗ Failed to start simulation: {e}")
-            print("  Falling back to JSON scene.")
+            print("  Real vision will be retried during Stage 2; no static scene will be used.")
             sim = None
 
     try:
@@ -399,6 +571,10 @@ if __name__ == "__main__":
             run_interactive(sim=sim)
         elif args.instruction:
             run_pipeline(args.instruction, verbose=not args.quiet, sim=sim)
+            # After single-instruction pipeline, keep PyBullet open in GUI mode
+            # so the user can inspect the result. Exit only when Q is pressed.
+            if sim is not None and os.getenv("SIMULATION_MODE", "DIRECT").upper() == "GUI":
+                _hold_simulation_open(sim)
         else:
             ap.print_help()
     finally:

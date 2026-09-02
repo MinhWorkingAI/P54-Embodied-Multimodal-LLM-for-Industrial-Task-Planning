@@ -167,6 +167,14 @@
           "latency_ms": 0.3273330003139563
         },
         "error": null
+      },
+      "vision_lookup": {
+        "stage": "vision_lookup",
+        "status": "failed",
+        "timestamp": "2026-08-17T05:18:47.614635+00:00",
+        "latency_ms": null,
+        "payload": null,
+        "error": "No module named 'pybullet'"
       }
     },
     "completed_at": "2026-09-02T16:58:33.195368+00:00"
