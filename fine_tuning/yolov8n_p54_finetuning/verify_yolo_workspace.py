@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 import pybullet as p
+from dotenv import load_dotenv
 
 REQUIRED_LABELS = [
     "red block",
@@ -32,6 +33,8 @@ def _repo_root() -> Path:
 ROOT = _repo_root()
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+load_dotenv(ROOT / ".env")
 
 
 def parse_args() -> argparse.Namespace:
